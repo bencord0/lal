@@ -3,7 +3,7 @@
 
 use clap::ArgMatches;
 use lal::{self, *};
-use std::{env::current_dir, ops::Deref, path::Path, process};
+use std::{env::current_dir, ffi::OsStr, ops::Deref, path::Path, process};
 
 fn result_exit<T>(name: &str, x: LalResult<T>) {
     let _ = x.map_err(|e| {
@@ -149,7 +149,7 @@ fn handle_env_command(
 ) -> Environment {
     // lookup associated container from
     let environment = cfg
-        .get_environment(env.into())
+        .get_environment(&OsStr::new(env))
         .map_err(|e| {
             error!("Environment error: {}", e);
             println!("Ensure that manifest.environment has a corresponding entry in ~/.lal/config");
@@ -362,7 +362,7 @@ fn main() {
     let explicit_env = args.value_of("environment");
     if let Some(env) = explicit_env {
         config
-            .get_environment(env.into())
+            .get_environment(&OsStr::new(env))
             .map_err(|e| {
                 error!("Environment error: {}", e);
                 process::exit(1)

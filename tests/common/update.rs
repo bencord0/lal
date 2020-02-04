@@ -13,6 +13,11 @@ pub fn update(
         dependencies.push(component.to_string());
     }
 
+    let env_name = env_name.to_str()
+        // Convert Option to Result, until try_trait is stable
+        // https://doc.rust-lang.org/std/option/enum.Option.html#impl-Try
+        .ok_or(lal::CliError::OptionIsNone)?;
+
     lal::update(
         &component_dir,
         &manifest,
@@ -30,6 +35,12 @@ pub fn update_all(
     backend: &dyn lal::CachedBackend,
 ) -> lal::LalResult<()> {
     let manifest = lal::Manifest::read(&component_dir)?;
+
+    let env_name = env_name.to_str()
+        // Convert Option to Result, until try_trait is stable
+        // https://doc.rust-lang.org/std/option/enum.Option.html#impl-Try
+        .ok_or(lal::CliError::OptionIsNone)?;
+
     lal::update_all(&component_dir, &manifest, backend, false, false, &env_name)
 }
 
@@ -47,6 +58,11 @@ pub fn update_with_save(
     for component in &components {
         dependencies.push(component.to_string());
     }
+
+    let env_name = env_name.to_str()
+        // Convert Option to Result, until try_trait is stable
+        // https://doc.rust-lang.org/std/option/enum.Option.html#impl-Try
+        .ok_or(lal::CliError::OptionIsNone)?;
 
     lal::update(
         &component_dir,
@@ -67,5 +83,11 @@ pub fn update_all_with_save(
     savedev: bool,
 ) -> lal::LalResult<()> {
     let manifest = lal::Manifest::read(&component_dir)?;
+
+    let env_name = env_name.to_str()
+        // Convert Option to Result, until try_trait is stable
+        // https://doc.rust-lang.org/std/option/enum.Option.html#impl-Try
+        .ok_or(lal::CliError::OptionIsNone)?;
+
     lal::update_all(&component_dir, &manifest, backend, save, savedev, &env_name)
 }

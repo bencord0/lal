@@ -1,11 +1,10 @@
 use crate::common::*;
 use parameterized_macro::parameterized;
-use std::path::Path;
-
+use std::{ffi::OsStr, path::Path};
 use lal::Backend;
 
-#[parameterized(env_name = {"default", "alpine"})]
-fn test_publish(env_name: &str) {
+#[parameterized(env_name = {OsStr::new("default"), OsStr::new("alpine")})]
+fn test_publish(env_name: &OsStr) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;
@@ -37,8 +36,8 @@ fn test_publish(env_name: &str) {
     );
 }
 
-#[parameterized(env_name = {"default", "alpine"})]
-fn test_publish_without_release(env_name: &str) {
+#[parameterized(env_name = {OsStr::new("default"), OsStr::new("alpine")})]
+fn test_publish_without_release(env_name: &OsStr) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;
@@ -61,8 +60,8 @@ fn test_publish_without_release(env_name: &str) {
     assert!(r.is_err(), "can't publish non-release build: {:?}", r);
 }
 
-#[parameterized(env_name = {"default", "alpine"})]
-fn test_publish_without_version(env_name: &str) {
+#[parameterized(env_name = {OsStr::new("default"), OsStr::new("alpine")})]
+fn test_publish_without_version(env_name: &OsStr) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;

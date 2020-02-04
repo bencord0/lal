@@ -57,7 +57,7 @@ fn test_build_with_force_in_wrong_environment(env_name: &str) {
     let mut build_opts = build::options(Some(&state.tempdir.path()), &env_name).expect("build options");
     build_opts.force = true;
 
-    let r = build::build_with_options(&component_dir, "nonexistant", &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(&component_dir, str::new("nonexistant"), &state.tempdir.path(), &build_opts);
     assert!(r.is_ok(), "built heylib with force in nonexistant environment");
 }
 

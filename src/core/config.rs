@@ -2,6 +2,7 @@ use chrono::UTC;
 use std::{
     collections::BTreeMap,
     env, fs,
+    ffi::{OsStr, OsString},
     io::prelude::*,
     path::{Path, PathBuf},
     vec::Vec,
@@ -202,7 +203,8 @@ impl Config {
     }
 
     /// Resolve an arbitrary environment shorthand
-    pub fn get_environment(&self, env: String) -> LalResult<Environment> {
+    pub fn get_environment(&self, env_name: &OsStr) -> LalResult<Environment> {
+        let env = env_name.to_string_lossy().to_string();
         if let Some(environment) = self.environments.get(&env) {
             return Ok(environment.clone());
         }
@@ -211,7 +213,8 @@ impl Config {
 
     /// Resolve an arbitrary container shorthand
     pub fn get_container(&self, env: String) -> LalResult<Container> {
-        match self.get_environment(env.clone())? {
+        let env_name = OsString::from(&env);
+        match self.get_environment(&env_name)? {
             Environment::Container(container) => Ok(container),
             Environment::None => Err(CliError::MissingEnvironment(env)),
         }

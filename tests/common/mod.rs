@@ -11,7 +11,9 @@ use crate::common::{
 };
 
 use std::{
-    env, fs,
+    env,
+    ffi::OsStr,
+    fs,
     path::{Path, PathBuf},
     sync::Once,
 };
@@ -107,7 +109,7 @@ pub fn clone_component_dir(component: &str, state: &TestState) -> PathBuf {
 
 pub fn publish_component(
     state: &TestState,
-    env_name: &str,
+    env_name: &OsStr,
     component: &str,
     version: &str,
 ) -> lal::LalResult<PathBuf> {
@@ -122,7 +124,7 @@ pub fn publish_component(
 
 pub fn publish_components(
     state: &TestState,
-    env_name: &str,
+    env_name: &OsStr,
     components: Vec<&str>,
     version: &str,
 ) -> lal::LalResult<PathBuf> {
@@ -142,7 +144,7 @@ pub fn publish_components(
 
 pub fn publish_component_versions(
     state: &TestState,
-    env_name: &str,
+    env_name: &OsStr,
     component: &str,
     versions: Vec<&str>,
 ) -> lal::LalResult<PathBuf> {
@@ -162,7 +164,7 @@ pub fn publish_component_versions(
 
 pub fn stash_component(
     state: &TestState,
-    env_name: &str,
+    env_name: &OsStr,
     component: &str,
     stash_name: &str,
 ) -> lal::LalResult<PathBuf> {
