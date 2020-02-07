@@ -1,3 +1,5 @@
+use hyper;
+use serde_json;
 use std::{fmt, io};
 
 /// The one and only error type for the lal library
@@ -188,6 +190,7 @@ impl fmt::Display for CliError {
                 "manifest.environment must exist in manifest.supportedEnvironments"
             ),
             CliError::MissingEnvironment(ref s) => {
+                let s = s.to_string_lossy().to_string();
                 write!(f, "Environment '{}' not found in ~/.lal/config", s)
             }
             CliError::EnvironmentUnspecified => write!(f, "Environment must be specified for this operation"),
