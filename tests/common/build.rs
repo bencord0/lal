@@ -37,17 +37,13 @@ pub fn build_with_options(
     let config = lal::Config::read(Some(&home))?;
     let manifest = lal::Manifest::read(&component_dir)?;
     let modes = lal::ShellModes::default();
-    let env_name = env_name.to_str()
-        // Convert Option to Result, until try_trait is stable
-        // https://doc.rust-lang.org/std/option/enum.Option.html#impl-Try
-        .ok_or(lal::CliError::OptionIsNone)?;
 
     lal::build(
         &component_dir,
         &config,
         &manifest,
         &build_opts,
-        env_name.to_string(),
+        &env_name,
         modes,
     )
     .map_err(|err| {
@@ -65,17 +61,13 @@ pub fn build_with_options_and_modes(
 ) -> lal::LalResult<()> {
     let config = lal::Config::read(Some(&home))?;
     let manifest = lal::Manifest::read(&component_dir)?;
-    let env_name = env_name.to_str()
-        // Convert Option to Result, until try_trait is stable
-        // https://doc.rust-lang.org/std/option/enum.Option.html#impl-Try
-        .ok_or(lal::CliError::OptionIsNone)?;
 
     lal::build(
         &component_dir,
         &config,
         &manifest,
         &build_opts,
-        env_name.to_string(),
+        &env_name,
         modes,
     )
 }

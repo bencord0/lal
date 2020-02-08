@@ -196,7 +196,7 @@ pub fn verify_consistent_dependency_versions(lf: &Lockfile, m: &Manifest) -> Lal
 }
 
 /// Strict requirement for verifier - all deps must be built in same environment
-pub fn verify_environment_consistency(lf: &Lockfile, env: &str) -> LalResult<()> {
+pub fn verify_environment_consistency(lf: &Lockfile, env_name: &str) -> LalResult<()> {
     for (name, envs) in lf.find_all_environments() {
         debug!("Found environment(s) for {} as {:?}", name, envs);
         if envs.len() != 1 {
@@ -204,7 +204,7 @@ pub fn verify_environment_consistency(lf: &Lockfile, env: &str) -> LalResult<()>
             return Err(CliError::MultipleEnvironments(name));
         } else {
             let used_env = envs.iter().next().unwrap();
-            if used_env != env {
+            if used_env != &env_name.to_string_lossy().to_string() {
                 return Err(CliError::EnvironmentMismatch(name, used_env.clone()));
             }
         }
