@@ -55,7 +55,7 @@ fn test_publish_without_release(env_name: &str) {
     build_opts.version = Some("1".into());
     build_opts.release = false;
 
-    let r = build::build_with_options(&component_dir, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
     assert!(r.is_ok(), "built heylib without release: {:?}", r);
 
     let r = publish::publish_release(&component_dir, &state.backend, &state.tempdir.path());
@@ -80,7 +80,7 @@ fn test_publish_without_version(env_name: &str) {
     build_opts.version = None;
     build_opts.release = true;
 
-    let r = build::build_with_options(&component_dir, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
     assert!(r.is_ok(), "built heylib without version: {:?}", r);
 
     let r = publish::publish_release(&component_dir, &state.backend, &state.tempdir.path());
