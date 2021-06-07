@@ -1,4 +1,4 @@
-use chrono::UTC;
+use chrono::Utc;
 use rand;
 use serde_json;
 
@@ -58,7 +58,7 @@ impl Lockfile {
         build_cfg: Option<&str>,
     ) -> Self {
         let def_version = format!("EXPERIMENTAL-{:x}", rand::random::<u64>());
-        let time = UTC::now();
+        let time = Utc::now();
         Lockfile {
             name: name.to_string(),
             version: v.unwrap_or(def_version),

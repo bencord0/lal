@@ -1,4 +1,4 @@
-use chrono::UTC;
+use chrono::Utc;
 use serde_json;
 use std::{
     collections::BTreeMap,
@@ -128,7 +128,7 @@ impl Config {
         let cache = config_dir(home).join("cache");
 
         // reset last update time
-        let time = UTC::now();
+        let time = Utc::now();
 
         // scan default mounts
         let mut mounts = vec![];
@@ -173,15 +173,15 @@ impl Config {
     #[cfg(feature = "upgrade")]
     pub fn upgrade_check_time(&self) -> bool {
         use chrono::{DateTime, Duration};
-        let last = self.lastUpgrade.parse::<DateTime<UTC>>().unwrap();
-        let cutoff = UTC::now() - Duration::days(1);
+        let last = self.lastUpgrade.parse::<DateTime<Utc>>().unwrap();
+        let cutoff = Utc::now() - Duration::days(1);
         last < cutoff
     }
 
     /// Update the lastUpgrade time to avoid triggering it for another day
     #[cfg(feature = "upgrade")]
     pub fn performed_upgrade(&mut self) -> LalResult<()> {
-        self.lastUpgrade = UTC::now().to_rfc3339();
+        self.lastUpgrade = Utc::now().to_rfc3339();
         Ok(self.write(true, None)?)
     }
 
