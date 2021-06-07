@@ -1,4 +1,4 @@
-use semver::Version;
+use semver::{BuildMetadata, Prerelease, Version};
 use std::{
     env, fs,
     path::{Path, PathBuf},
@@ -36,7 +36,6 @@ fn docker_sanity() -> LalResult<()> {
 }
 
 fn kernel_sanity() -> LalResult<()> {
-    use semver::Identifier;
     // NB: ubuntu's use of linux kernel is not completely semver
     // the pre numbers does not indicate a prerelease, but rather fixes
     // thus 4.4.0-93 on ubuntu is semver LESS than semver 4.4.0
@@ -45,8 +44,8 @@ fn kernel_sanity() -> LalResult<()> {
         major: 4,
         minor: 4,
         patch: 0,
-        pre: vec![Identifier::Numeric(0), Identifier::Numeric(0)],
-        build: vec![],
+        pre: Prerelease::new("0-0")?,
+        build: BuildMetadata::EMPTY,
     };
     let uname_output = Command::new("uname").arg("-r").output()?;
     let uname = String::from_utf8_lossy(&uname_output.stdout);
@@ -97,8 +96,8 @@ fn docker_version_check() -> LalResult<()> {
         major: 1,
         minor: 12,
         patch: 0,
-        pre: vec![],
-        build: vec![],
+        pre: Prerelease::EMPTY,
+        build: BuildMetadata::EMPTY,
     };
     // NB: this is nicer: `docker version -f "{{ .Server.Version }}"`
     // but it doesn't work on the old versions we wnat to prevent..
