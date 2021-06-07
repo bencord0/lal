@@ -1,7 +1,6 @@
 use super::{LalResult, Lockfile, Manifest};
-use serde_json;
+use serde::Serialize;
 use std::{collections::BTreeSet, path::Path};
-
 
 /// A single update of of a propagation
 #[derive(Serialize)]
@@ -71,7 +70,6 @@ pub fn compute(lf: &Lockfile, component: &str) -> LalResult<UpdateSequence> {
     }
     Ok(result)
 }
-
 
 /// Outputs the update path to the current manifest for a specific component
 ///

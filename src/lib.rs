@@ -20,9 +20,6 @@
 #[macro_use] extern crate hyper;
 
 
-#[macro_use] extern crate serde_derive;
-
-
 #[macro_use] extern crate log;
 
 
@@ -46,7 +43,6 @@ pub mod env;
 pub mod list;
 /// Propagation module with all structs describing the steps
 pub mod propagate;
-
 
 // lift most other pub functions into our libraries main scope
 // this avoids having to type lal:build in tests and main.rs

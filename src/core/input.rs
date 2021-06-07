@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-use serde_json;
+use serde::Deserialize;
 use std::{collections::BTreeMap, fs::File, io::prelude::*, path::Path};
 
 use walkdir::WalkDir;

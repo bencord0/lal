@@ -1,6 +1,5 @@
 use chrono::Utc;
-use rand;
-use serde_json;
+use serde::{Serialize, Deserialize};
 
 use std::{
     fs::File,

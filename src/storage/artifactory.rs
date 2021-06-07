@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
     vec::Vec,
 };
+use serde::{Serialize, Deserialize};
 
 #[cfg(feature = "upgrade")] use semver::Version;
 
@@ -18,7 +19,6 @@ use hyper::{
     Client,
 };
 use hyper_native_tls::NativeTlsClient;
-use serde_json;
 use sha1;
 
 use crate::core::{CliError, LalResult};

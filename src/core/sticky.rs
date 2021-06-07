@@ -1,4 +1,4 @@
-use serde_json;
+use serde::{Serialize, Deserialize};
 use std::{
     fs,
     io::prelude::{Read, Write},
