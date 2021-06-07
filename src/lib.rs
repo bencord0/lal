@@ -21,7 +21,6 @@
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 
-
 // re-exports
 
 /// App module for clap argument parsing

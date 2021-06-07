@@ -14,14 +14,11 @@ use serde::{Serialize, Deserialize};
 use hyper::{
     self,
     header::{Authorization, Basic},
-    net::HttpsConnector,
     status::StatusCode,
     Client,
 };
-use hyper_native_tls::NativeTlsClient;
 
 use crate::core::{CliError, LalResult};
-
 
 /// Artifactory credentials
 #[derive(Serialize, Deserialize, Clone)]
@@ -57,7 +54,6 @@ pub struct ArtifactoryConfig {
     pub credentials: Option<Credentials>,
 }
 
-
 // Need these to query for stored artifacts:
 // This query has tons of info, but we only care about the version
 // And the version is encoded in children.uri with leading slash
@@ -72,7 +68,7 @@ struct ArtifactoryStorageResponse {
 
 // simple request body fetcher
 fn hyper_req(url: &str) -> LalResult<String> {
-    let client = Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
+    let client = Client::new();
     let mut res = client.get(url).send()?;
     if res.status != hyper::Ok {
         return Err(CliError::BackendFailure(format!(
@@ -88,7 +84,7 @@ fn hyper_req(url: &str) -> LalResult<String> {
 // simple request downloader
 pub fn http_download_to_path(url: &str, save: &Path) -> LalResult<()> {
     debug!("GET {}", url);
-    let client = Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
+    let client = Client::new();
     let mut res = client.get(url).send()?;
     if res.status != hyper::Ok {
         return Err(CliError::BackendFailure(format!(
@@ -126,7 +122,6 @@ pub fn http_download_to_path(url: &str, save: &Path) -> LalResult<()> {
     }
     Ok(())
 }
-
 
 /// Query the Artifactory storage api
 ///
