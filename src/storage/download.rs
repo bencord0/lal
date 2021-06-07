@@ -56,13 +56,13 @@ fn extract_tarball_to_input(tarname: PathBuf, component_dir: &Path, component: &
             use super::progress::ProgressReader;
             let data = fs::File::open(tarname)?;
             let progdata = ProgressReader::new(data)?;
-            let decompressed = GzDecoder::new(progdata)?; // decoder reads data (proxied)
+            let decompressed = GzDecoder::new(progdata); // decoder reads data (proxied)
             let mut archive = Archive::new(decompressed); // Archive reads decoded
             archive.unpack(&extract_path)?;
         }
     } else {
         let data = fs::File::open(tarname)?;
-        let decompressed = GzDecoder::new(data)?; // decoder reads data
+        let decompressed = GzDecoder::new(data); // decoder reads data
         let mut archive = Archive::new(decompressed); // Archive reads decoded
         archive.unpack(&extract_path)?;
     };
