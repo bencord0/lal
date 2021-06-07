@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
     vec::Vec,
 };
+use serde::{Serialize, Deserialize};
 
 #[cfg(feature = "upgrade")] use semver::Version;
 

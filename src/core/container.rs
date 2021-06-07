@@ -1,4 +1,5 @@
 use std::fmt;
+use serde::{Serialize, Deserialize};
 
 /// Representation of a docker container image
 #[derive(Serialize, Deserialize, Debug, Clone)]
