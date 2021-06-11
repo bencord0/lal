@@ -43,7 +43,7 @@ tempfile = "3"
 
 [dependencies.indicatif]
 optional = true
-version = "0.3.3"
+version = "0.16.2"
 
 [features]
 default = ["docker", "progress"]
