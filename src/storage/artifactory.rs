@@ -9,7 +9,8 @@ use std::{
 };
 use serde::{Serialize, Deserialize};
 
-#[cfg(feature = "upgrade")] use semver::Version;
+#[cfg(feature = "upgrade")]
+use semver::Version;
 
 use hyper::{
     self,

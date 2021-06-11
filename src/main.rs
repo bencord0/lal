@@ -1,5 +1,7 @@
-#[macro_use] extern crate clap;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate clap;
+#[macro_use]
+extern crate log;
 
 use clap::ArgMatches;
 use lal::{self, *};
