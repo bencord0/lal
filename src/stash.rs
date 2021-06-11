@@ -3,7 +3,6 @@ use std::path::Path;
 use super::{CliError, LalResult, Lockfile, Manifest};
 use crate::storage::CachedBackend;
 
-
 /// Saves current build `./OUTPUT` to the local cache under a specific name
 ///
 /// This tars up `/OUTPUT` similar to how `build` is generating a tarball,

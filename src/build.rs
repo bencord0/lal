@@ -6,7 +6,6 @@ use super::{
 };
 use crate::{shell, verify::verify};
 
-
 fn find_valid_build_script(component_dir: &Path) -> LalResult<String> {
     use std::os::unix::fs::PermissionsExt;
 
@@ -40,7 +39,6 @@ fn find_valid_build_script(component_dir: &Path) -> LalResult<String> {
     Ok(build_string)
 }
 
-
 /// Configurable build flags for `lal build`
 pub struct BuildOptions {
     /// Component to build if specified
@@ -60,7 +58,6 @@ pub struct BuildOptions {
     /// Use the `simple` verify algorithm
     pub simple_verify: bool,
 }
-
 
 /// Runs the `./BUILD` script in a controlled environment and packages artifacts.
 ///
@@ -94,7 +91,6 @@ pub fn build(
         verify_failed = true;
         warn!("Verify failed - build will fail on jenkins, but continuing");
     }
-
 
     let component = opts.name.clone().unwrap_or_else(|| manifest.name.clone());
     debug!("Getting configurations for {}", component);

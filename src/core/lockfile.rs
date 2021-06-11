@@ -11,7 +11,6 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use super::{input, CliError, Environment, LalResult};
 
-
 /// Representation of `lockfile.json`
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
@@ -139,7 +138,6 @@ impl Lockfile {
         Ok(())
     }
 }
-
 
 // name of component -> (value1, value2, ..)
 pub type ValueUsage = HashMap<String, BTreeSet<String>>;
