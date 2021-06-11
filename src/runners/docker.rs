@@ -184,8 +184,6 @@ pub fn docker_run(
     modes: &ShellModes,
     component_dir: &Path,
 ) -> LalResult<()> {
-    let mut modified_container_option: Option<Container> = None;
-
     debug!("Performing docker permission sanity check");
     if let Err(e) = permission_sanity_check() {
         match e {
@@ -198,7 +196,6 @@ pub fn docker_run(
                         g,
                     ));
                 }
-                modified_container_option = Some(fixup_docker_container(container, u, g)?);
             }
             x => {
                 return Err(x);
@@ -207,6 +204,7 @@ pub fn docker_run(
     };
 
     // Shadow container here
+    let modified_container_option: Option<Container> = fixup_docker_container(container, 1000, 1000).ok();
     let container = modified_container_option.as_ref().unwrap_or(container);
 
     debug!("Finding home and cwd");
@@ -256,7 +254,7 @@ pub fn docker_run(
     args.push("-w".into());
     args.push("/home/lal/volume".into());
     args.push("--user".into());
-    args.push("lal".into());
+    args.push("1000:1000".into());
 
     // If no command, then override entrypoint to /bin/bash
     // This happens when we use `lal shell` without args
