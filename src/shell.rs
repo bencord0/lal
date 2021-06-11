@@ -22,7 +22,6 @@ pub fn run(
     }
 }
 
-
 /// Mounts and enters `.` in an interactive bash shell using the configured container.
 ///
 /// If a command vector is given, this is called non-interactively instead of /bin/bash

@@ -140,7 +140,6 @@ fn upgrade_exe(latest: &LatestLal, exe: &ExeInfo) -> LalResult<()> {
     Ok(()) // we did it!
 }
 
-
 /// Check for and possibly upgrade lal when using musl releases
 ///
 /// This will query for the latest version, and upgrade in the one possible case.
