@@ -4,7 +4,7 @@ use std::{
     fmt,
     fs::File,
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::Path,
     vec::Vec,
 };
 use serde::{Serialize, Deserialize};

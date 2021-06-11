@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use std::{
     fs,
     io::ErrorKind,
-    path::{Path, PathBuf},
+    path::Path,
     str::FromStr,
     vec::Vec,
 };
