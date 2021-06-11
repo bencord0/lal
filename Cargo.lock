@@ -28,12 +28,6 @@ dependencies = [
 
 [[package]]
 name = "ansi_term"
-version = "0.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b3568b48b7cefa6b8ce125f9bb4989e52fbcc29ebea88df04cc7c5f12f70455"
-
-[[package]]
-name = "ansi_term"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee49baf6cb617b853aa8d93bf420db2383fab46d314482ca2803b40d5fde979b"
@@ -338,7 +332,7 @@ dependencies = [
  "hyper",
  "indicatif",
  "lazy_static 1.4.0",
- "log 0.3.9",
+ "log 0.4.14",
  "loggerv",
  "openssl-probe",
  "parameterized-macro",
@@ -412,13 +406,13 @@ dependencies = [
 
 [[package]]
 name = "loggerv"
-version = "0.6.0"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b178879253fab6ddb4ea931e1e6f514d45ce6a53f7fe618a0a8751f43e42e4f1"
+checksum = "60d8de15ae71e760bce7f05447f85f73624fe0d3b1e4c5a63ba5d4cb0748d374"
 dependencies = [
- "ansi_term 0.10.2",
+ "ansi_term 0.12.1",
  "atty",
- "log 0.3.9",
+ "log 0.4.14",
 ]
 
 [[package]]
