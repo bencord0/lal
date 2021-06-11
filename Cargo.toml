@@ -22,8 +22,6 @@ path = "src/main.rs"
 [dependencies]
 ansi_term = "0.12.1"
 sha1 = "0.3.0"
-walkdir = "1.0.7"
-dirs = "2.0.2"
 chrono = "0.4"
 clap = "2.33.1"
 filetime = "0.2"
@@ -38,6 +36,8 @@ semver = "1.0.3"
 serde = { version = "1.0.110", features = ["derive"] }
 serde_json = "1.0.64"
 tar = "0.4.35"
+walkdir = "2.3.2"
+dirs = "3.0.2"
 tempfile = "3"
 
 [dependencies.indicatif]
