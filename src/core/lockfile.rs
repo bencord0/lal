@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use std::{
     fs::File,
     io::prelude::*,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -72,7 +72,7 @@ impl Lockfile {
     }
 
     /// Opened lockfile at a path
-    pub fn from_path(lock_path: &PathBuf, name: &str) -> LalResult<Self> {
+    pub fn from_path(lock_path: &Path, name: &str) -> LalResult<Self> {
         if !lock_path.exists() {
             return Err(CliError::MissingLockfile(name.to_string()));
         }
@@ -84,7 +84,7 @@ impl Lockfile {
     /// A reader from ARTIFACT directory
     pub fn release_build(component_dir: &Path) -> LalResult<Self> {
         let lpath = component_dir.join("ARTIFACT").join("lockfile.json");
-        Ok(Lockfile::from_path(&lpath, "release build")?)
+        Lockfile::from_path(&lpath, "release build")
     }
 
     // Helper constructor for input populator below
@@ -93,7 +93,7 @@ impl Lockfile {
             .join("./INPUT")
             .join(component)
             .join("lockfile.json");
-        Ok(Lockfile::from_path(&lock_path, component)?)
+        Lockfile::from_path(&lock_path, component)
     }
 
     /// Read all the lockfiles in INPUT to generate the full lockfile

@@ -4,7 +4,7 @@ use std::{
     fmt,
     fs::File,
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::Path,
     vec::Vec,
 };
 use serde::{Serialize, Deserialize};
@@ -403,7 +403,7 @@ impl Backend for ArtifactoryBackend {
         self.cache.clone()
     }
 
-    fn raw_fetch(&self, url: &str, dest: &PathBuf) -> LalResult<()> {
+    fn raw_fetch(&self, url: &str, dest: &Path) -> LalResult<()> {
         http_download_to_path(url, dest)
     }
 }
