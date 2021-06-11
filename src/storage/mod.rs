@@ -14,4 +14,5 @@ mod download;
 mod local;
 mod traits;
 
-#[cfg(feature = "progress")] mod progress;
+#[cfg(feature = "progress")]
+mod progress;

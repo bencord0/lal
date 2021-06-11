@@ -78,5 +78,7 @@ mod status;
 mod update;
 mod verify;
 
-#[cfg(feature = "upgrade")] pub use upgrade::upgrade;
-#[cfg(feature = "upgrade")] mod upgrade;
+#[cfg(feature = "upgrade")]
+pub use upgrade::upgrade;
+#[cfg(feature = "upgrade")]
+mod upgrade;

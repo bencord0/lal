@@ -2,7 +2,7 @@ use flate2::{write::GzEncoder, Compression};
 use std::{fs::File, path::Path};
 use tar::Builder;
 
-use super::{LalResult};
+use super::LalResult;
 
 /// Helper for stash and build
 pub fn tar(component_dir: &Path, tarball: &Path) -> LalResult<()> {
