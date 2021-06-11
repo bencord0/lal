@@ -624,9 +624,9 @@ dependencies = [
 
 [[package]]
 name = "sha1"
-version = "0.3.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f35e6e47328ec7d599a0adba8233559dc4711d752ba9c4c6078274b8be9d5a77"
+checksum = "2579985fda508104f7587689507983eadd6a6e84dd35d6d115361f530916fa0d"
 
 [[package]]
 name = "strsim"
