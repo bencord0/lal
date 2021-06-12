@@ -1,0 +1,22 @@
+name: 'Pull Request'
+on: ['pull_request']
+
+jobs:
+  check:
+    name: 'Check Pull Request'
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - uses: 'actions/checkout'
+    - name: 'Install Stable Toolchain'
+      uses: 'actions-rs/toolchain@v1'
+      with:
+        target: 'x86_64-unknown-linux-musl'
+        profile: 'minimal'
+        components: 'clippy'
+
+    - run: 'cargo build'
+    - run: 'cargo clippy'
+    - run: 'cargo test --no-default-features'
+    - run: 'cargo test'
+    - run: 'cargo doc --no-deps'
