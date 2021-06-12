@@ -1,0 +1,47 @@
+name: 'Manually Triggered Release'
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Release version tag'
+        required: true
+
+env:
+  RUST_BACKTRACE: 'full'
+
+jobs:
+  build:
+    name: 'Release Build'
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - uses: 'actions/checkout@v2'
+    - name: 'Install Stable Toolchain'
+      uses: 'actions-rs/toolchain@v1'
+      with:
+        toolchain: 'stable'
+        target: 'x86_64-unknown-linux-musl'
+        profile: 'minimal'
+        components: 'clippy'
+
+    - name: 'Native Release Build'
+      run: 'cargo build --release '
+
+    - name: 'LAL Configure'
+      run: 'cargo run --release -- configure'
+    - name: 'LAL Release Build'
+      run: |
+        echo "REF: ${{ github.ref }}"
+        echo "SHA: ${{ github.sha }}"
+        cargo run --release \
+          -- build --release \
+          --with-sha ${{ github.sha }} \
+          --with-version ${{ github.event.inputs.version_tag }}
+
+    - run: 'cat ./ARTIFACT/lockfile.json'
+
+    - name: 'Upload Release Artifact'
+      uses: 'actions/upload-artifact@v2'
+      with:
+        name: lal-${{ github.event.inputs.version_tag }}.tar.gz
+        path: './ARTIFACT/lal.tar.gz'
