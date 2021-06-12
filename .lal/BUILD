@@ -32,7 +32,7 @@ main() {
       cp ./target/x86_64-unknown-linux-musl/release/lal OUTPUT/bin/
     elif [[ $2 == "debug" ]]; then
       (
-        set -x; cargo build
+        set -x; cargo build \
         --target x86_64-unknown-linux-musl \
         --verbose
       )
