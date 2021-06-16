@@ -1,6 +1,6 @@
-use std::process::Command;
 use crate::common::*;
 use parameterized_macro::parameterized;
+use std::process::Command;
 
 #[parameterized(env_name = {"default", "alpine"})]
 fn test_build(env_name: &str) {
@@ -34,10 +34,17 @@ fn test_build_with_force(env_name: &str) {
     assert!(r.is_ok(), "installed heylib dependencies");
 
     // Force build the component
-    let mut build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let mut build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
     build_opts.force = true;
 
-    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(r.is_ok(), "built heylib with force");
 }
 
@@ -56,10 +63,17 @@ fn test_build_with_force_in_wrong_environment(env_name: &str) {
     assert!(r.is_ok(), "installed heylib dependencies");
 
     // Force build the component
-    let mut build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let mut build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
     build_opts.force = true;
 
-    let r = build::build_with_options(&component_dir, &manifest, "nonexistant", &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        "nonexistant",
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(r.is_ok(), "built heylib with force in nonexistant environment");
 }
 
@@ -78,7 +92,8 @@ fn test_build_with_printonly(env_name: &str) {
     assert!(r.is_ok(), "installed heylib dependencies");
 
     // Default build options
-    let build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
 
     // Print commands, don't execute
     let mut modes = lal::ShellModes::default();
@@ -116,10 +131,7 @@ fn test_build_with_release_create_tar_compatible_output(env_name: &str) {
     let extracted = state.tempdir.path().join("EXTRACTED");
     std::fs::create_dir_all(&extracted).unwrap();
 
-    let args: Vec<&str> = vec![
-        "xvf", &artifact.to_str().unwrap(),
-        "-C", "EXTRACTED",
-    ];
+    let args: Vec<&str> = vec!["xvf", &artifact.to_str().unwrap(), "-C", "EXTRACTED"];
 
     // Spawn `tar` in a subprocess to test if it can read the artifact
     let r = Command::new("tar")
@@ -136,15 +148,13 @@ fn test_build_with_release_create_tar_compatible_output(env_name: &str) {
     assert!(
         status.success(),
         "Subprocess failed: {:?}\n{}\n{}",
-        status, stdout, stderr
+        status,
+        stdout,
+        stderr
     );
 
     // Check for the extracted file content
-    for file in [
-        "hey.h",
-        "libhey.a",
-        "lockfile.json",
-    ].iter() {
+    for file in ["hey.h", "libhey.a", "lockfile.json"].iter() {
         let metadata = std::fs::metadata(&extracted.join(file));
         let metadata = metadata.expect(file);
         assert!(metadata.is_file());

@@ -1,7 +1,5 @@
-#[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate clap;
+#[macro_use] extern crate log;
 
 use clap::ArgMatches;
 use lal::{self, *};
@@ -19,12 +17,8 @@ fn result_exit<T>(name: &str, x: LalResult<T>) {
 
 fn get_backend(config: &Config) -> Box<dyn CachedBackend> {
     match config.backend {
-        BackendConfiguration::Artifactory(ref cfg) => {
-            Box::new(ArtifactoryBackend::new(&cfg, &config.cache))
-        }
-        BackendConfiguration::Local(ref cfg) => {
-            Box::new(LocalBackend::new(&cfg, &config.cache))
-        }
+        BackendConfiguration::Artifactory(ref cfg) => Box::new(ArtifactoryBackend::new(&cfg, &config.cache)),
+        BackendConfiguration::Local(ref cfg) => Box::new(LocalBackend::new(&cfg, &config.cache)),
     }
 }
 
@@ -155,7 +149,8 @@ fn handle_env_command(
     stickies: &StickyOptions,
 ) -> Environment {
     // lookup associated container from
-    let environment = mf.get_environment(env)
+    let environment = mf
+        .get_environment(env)
         .or_else(|_| cfg.get_environment(env))
         .map_err(|e| {
             error!("Environment error: {}", e);
@@ -177,7 +172,13 @@ fn handle_env_command(
         } else if let Some(sa) = a.subcommand_matches("set") {
             result_exit(
                 "env override",
-                lal::env::set(&component_dir, stickies, cfg, mf, sa.value_of("environment").unwrap()),
+                lal::env::set(
+                    &component_dir,
+                    stickies,
+                    cfg,
+                    mf,
+                    sa.value_of("environment").unwrap(),
+                ),
             )
         } else {
             // just print current environment
@@ -307,10 +308,7 @@ fn main() {
 
     // Allow lal configure without assumptions
     if let Some(_a) = args.subcommand_matches("configure") {
-        result_exit(
-            "configure",
-            lal::configure(true, true, None),
-        );
+        result_exit("configure", lal::configure(true, true, None));
     }
 
     // Force config to exists before allowing remaining actions

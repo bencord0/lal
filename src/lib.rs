@@ -17,11 +17,9 @@
 //! This tool depends on the rust ecosystem and their crates. Dependencies referenced
 //! explicitly or implicitly is listed on the left of this page.
 
-#[macro_use]
-extern crate hyper;
+#[macro_use] extern crate hyper;
 
-#[macro_use]
-extern crate log;
+#[macro_use] extern crate log;
 
 // re-exports
 
@@ -78,7 +76,5 @@ mod status;
 mod update;
 mod verify;
 
-#[cfg(feature = "upgrade")]
-pub use upgrade::upgrade;
-#[cfg(feature = "upgrade")]
-mod upgrade;
+#[cfg(feature = "upgrade")] pub use upgrade::upgrade;
+#[cfg(feature = "upgrade")] mod upgrade;

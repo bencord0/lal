@@ -1,11 +1,7 @@
 use chrono::Utc;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use std::{
-    fs::File,
-    io::prelude::*,
-    path::Path,
-};
+use std::{fs::File, io::prelude::*, path::Path};
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 

@@ -85,34 +85,28 @@ pub fn analyze_full(manifest: &Manifest, component_dir: &Path) -> LalResult<Inpu
             Some(v) => v.clone(),
             None => v.to_string(),
         };
-        depmap.insert(
-            d.clone(),
-            InputDependency {
-                name: d.clone(),
-                version,
-                requirement: Some(format!("{}", v)),
-                missing: deps.get(&d).is_none(),
-                development: manifest.devDependencies.contains_key(&d),
-                extraneous: false,
-            },
-        );
+        depmap.insert(d.clone(), InputDependency {
+            name: d.clone(),
+            version,
+            requirement: Some(format!("{}", v)),
+            missing: deps.get(&d).is_none(),
+            development: manifest.devDependencies.contains_key(&d),
+            extraneous: false,
+        });
     }
     // check for potentially non-manifested deps
     // i.e. something in INPUT, but not in manifest
     for name in deps.keys() {
         let actual_ver = deps[name].clone();
         if !saved_deps.contains_key(name) {
-            depmap.insert(
-                name.clone(),
-                InputDependency {
-                    name: name.clone(),
-                    version: actual_ver,
-                    requirement: None,
-                    missing: false,
-                    development: false,
-                    extraneous: true,
-                },
-            );
+            depmap.insert(name.clone(), InputDependency {
+                name: name.clone(),
+                version: actual_ver,
+                requirement: None,
+                missing: false,
+                development: false,
+                extraneous: true,
+            });
         }
     }
 
@@ -187,10 +181,7 @@ pub fn verify_consistent_dependency_versions(lf: &Lockfile, m: &Manifest) -> Lal
         debug!("Found version(s) for {} as {:?}", name, vers);
         assert!(!vers.is_empty(), "found versions");
         if vers.len() != 1 && m.dependencies.contains_key(&name) {
-            warn!(
-                "Multiple version requirements on {} found in lockfile",
-                name
-            );
+            warn!("Multiple version requirements on {} found in lockfile", name);
             warn!(
                 "If you are trying to propagate {0} into the tree, \
                  you need to follow `lal propagate {0}`",

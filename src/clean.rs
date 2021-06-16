@@ -17,8 +17,7 @@ fn clean_in_dir(cutoff: DateTime<Utc>, dirs: WalkDir) -> LalResult<()> {
         let pth = d.path();
         trace!("Checking {}", pth.to_str().unwrap());
         let mtime = FileTime::from_last_modification_time(&d.metadata().unwrap());
-        let mtimedate =
-            Utc.ymd(1970, 1, 1).and_hms(0, 0, 0) + Duration::seconds(mtime.unix_seconds() as i64);
+        let mtimedate = Utc.ymd(1970, 1, 1).and_hms(0, 0, 0) + Duration::seconds(mtime.unix_seconds() as i64);
 
         trace!("Found {} with mtime {}", pth.to_str().unwrap(), mtimedate);
         if mtimedate < cutoff {

@@ -1,5 +1,5 @@
 use chrono::Utc;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     env, fs,
@@ -81,11 +81,10 @@ impl ConfigDefaults {
     /// Open and deserialize a defaults file
     pub fn new() -> Self {
         ConfigDefaults {
-            backend: BackendConfiguration::Local(LocalConfig{}),
+            backend: BackendConfiguration::Local(LocalConfig {}),
             environments: BTreeMap::<String, Environment>::new(),
             mounts: Vec::<Mount>::new(),
             minimum_lal: Option::<String>::None,
-
         }
     }
 }
@@ -202,7 +201,7 @@ impl Config {
     /// Resolve an arbitrary environment shorthand
     pub fn get_environment<Env>(&self, env: Env) -> LalResult<Environment>
     where
-        Env: Into<String>
+        Env: Into<String>,
     {
         let env = env.into();
         if let Some(environment) = self.environments.get(&env) {
