@@ -43,5 +43,5 @@ jobs:
     - name: 'Upload Release Artifact'
       uses: 'actions/upload-artifact@v2'
       with:
-        name: lal-${{ github.event.inputs.version_tag }}.tar.gz
+        name: lal-${{ github.event.inputs.version_tag }}
         path: './ARTIFACT/lal.tar.gz'
