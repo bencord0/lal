@@ -32,14 +32,21 @@ fn test_build_stashed_self_with_simple_verify(env_name: &str) {
     let component_dir = clone_component_dir("heylib", &state);
     let manifest = lal::Manifest::read(&component_dir).expect("read manifest");
 
-    let mut build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let mut build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
     build_opts.name = Some("heylib".to_string());
     build_opts.version = None;
 
     // Initial build to generate a stashed component
     let r = fetch::fetch_input(&component_dir, &env_name, &state.backend);
     assert!(r.is_ok(), "installed heylib dependencies");
-    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(r.is_ok(), "built heylib for stashing");
     let r = stash::stash(&component_dir, &state.backend, "blah");
     assert!(r.is_ok(), "stashed heylib=blah artifact");
@@ -52,7 +59,13 @@ fn test_build_stashed_self_with_simple_verify(env_name: &str) {
     // Build with the stashed dependency in INPUT
     // This will fail, since stashed dependencies are not available to anyone besides
     // yourself locally. A stashed dependency is never published.
-    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    );
     match r {
         Err(lal::CliError::NonGlobalDependencies(nonglobal)) => {
             assert_eq!(nonglobal, "heylib");
@@ -66,7 +79,13 @@ fn test_build_stashed_self_with_simple_verify(env_name: &str) {
     // The build can succeed if using the `simple_verify` algorithm.
     build_opts.force = false;
     build_opts.simple_verify = true;
-    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(
         r.is_ok(),
         "built heylib using stashed dependencies (simple_verify = true)"
@@ -84,14 +103,21 @@ fn test_build_stashed_self_with_force(env_name: &str) {
     let component_dir = clone_component_dir("heylib", &state);
     let manifest = lal::Manifest::read(&component_dir).expect("read manifest");
 
-    let mut build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let mut build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
     build_opts.name = Some("heylib".into());
     build_opts.version = None;
 
     // Initial build to generate a stashed component
     let r = fetch::fetch_input(&component_dir, &env_name, &state.backend);
     assert!(r.is_ok(), "installed heylib dependencies");
-    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(r.is_ok(), "built heylib for stashing");
     let r = stash::stash(&component_dir, &state.backend, "blah");
     assert!(r.is_ok(), "stashed heylib=blah artifact");
@@ -105,7 +131,13 @@ fn test_build_stashed_self_with_force(env_name: &str) {
     // The build can succeed if using `force`.
     build_opts.force = true;
     build_opts.simple_verify = false;
-    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(
         r.is_ok(),
         "built heylib using stashed dependencies (force = true)"

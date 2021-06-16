@@ -25,7 +25,13 @@ pub fn update(component_dir: &Path, environment: &Environment, env: &str) -> Lal
 }
 
 /// Creates and sets the environment in the local .lal/opts file
-pub fn set(component_dir: &Path, opts_: &StickyOptions, cfg: &Config, mf: &Manifest, env: &str) -> LalResult<()> {
+pub fn set(
+    component_dir: &Path,
+    opts_: &StickyOptions,
+    cfg: &Config,
+    mf: &Manifest,
+    env: &str,
+) -> LalResult<()> {
     if !cfg.environments.contains_key(env) && !mf.environments.contains_key(env) {
         return Err(CliError::MissingEnvironment(env.into()));
     }

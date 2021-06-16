@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 
+use serde::{Deserialize, Serialize};
 use std::{
     fmt,
     fs::File,
@@ -7,10 +8,8 @@ use std::{
     path::{Path, PathBuf},
     vec::Vec,
 };
-use serde::{Serialize, Deserialize};
 
-#[cfg(feature = "upgrade")]
-use semver::Version;
+#[cfg(feature = "upgrade")] use semver::Version;
 
 use hyper::{
     self,

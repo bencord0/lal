@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fs::{self, File},
@@ -7,7 +7,7 @@ use std::{
     vec::Vec,
 };
 
-use super::{CliError, LalResult, Environment};
+use super::{CliError, Environment, LalResult};
 
 /// A startup helper used in a few places
 pub fn create_lal_subdir(pwd: &Path) -> LalResult<()> {
@@ -196,7 +196,7 @@ impl Manifest {
     /// Resolve an arbitrary environment
     pub fn get_environment<Env>(&self, env: Env) -> LalResult<Environment>
     where
-        Env: Into<String>
+        Env: Into<String>,
     {
         let env = env.into();
         if let Some(environment) = self.environments.get(&env) {

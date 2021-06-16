@@ -1,5 +1,5 @@
 #![allow(missing_docs)]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use std::{
     fs,

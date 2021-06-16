@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use serde::{Serialize, Deserialize};
 
 use super::{ArtifactoryConfig, LocalConfig};
 use crate::core::LalResult;

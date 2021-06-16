@@ -1,10 +1,15 @@
 use std::path::Path;
 
-pub fn options(home: Option<&Path>, env_name: &str, manifest: &lal::Manifest) -> lal::LalResult<lal::BuildOptions> {
+pub fn options(
+    home: Option<&Path>,
+    env_name: &str,
+    manifest: &lal::Manifest,
+) -> lal::LalResult<lal::BuildOptions> {
     let config = lal::Config::read(home)?;
     debug!("options: config: {:#?}", config);
 
-    let environment = manifest.get_environment(env_name)
+    let environment = manifest
+        .get_environment(env_name)
         .or(config.get_environment(env_name))?;
     debug!("options: environment: {}", environment);
 

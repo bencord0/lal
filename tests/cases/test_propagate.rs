@@ -31,25 +31,23 @@ fn test_propagate_compute(env_name: &str) {
     assert_eq!(update_sequence.stages[0].updates.len(), 2); // must update both mid points
 
     assert_eq!(update_sequence.stages[0].updates[0].repo, "prop-mid-1");
-    assert_eq!(
-        update_sequence.stages[0].updates[0].dependencies,
-        vec!["prop-leaf"]
-    );
+    assert_eq!(update_sequence.stages[0].updates[0].dependencies, vec![
+        "prop-leaf"
+    ]);
 
     assert_eq!(update_sequence.stages[0].updates[1].repo, "prop-mid-2");
-    assert_eq!(
-        update_sequence.stages[0].updates[1].dependencies,
-        vec!["prop-leaf"]
-    );
+    assert_eq!(update_sequence.stages[0].updates[1].dependencies, vec![
+        "prop-leaf"
+    ]);
 
     // second stage
     assert_eq!(update_sequence.stages[1].updates.len(), 1); // must update base
 
     assert_eq!(update_sequence.stages[1].updates[0].repo, "prop-base");
-    assert_eq!(
-        update_sequence.stages[1].updates[0].dependencies,
-        vec!["prop-mid-1", "prop-mid-2"]
-    );
+    assert_eq!(update_sequence.stages[1].updates[0].dependencies, vec![
+        "prop-mid-1",
+        "prop-mid-2"
+    ]);
 
     // print tree for extra coverage of bigger trees
     let r = status::full_descriptive_status(&component_dir);

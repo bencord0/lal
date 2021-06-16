@@ -69,11 +69,7 @@ fn configure_local_backend(home: &Path) -> LocalBackend {
     let config = Config::read(Some(&home));
     assert!(config.is_err(), "no config at this point");
 
-    let r = lal::configure(
-        true,
-        false,
-        Some(&home),
-    );
+    let r = lal::configure(true, false, Some(&home));
     assert!(r.is_ok(), "configure succeeded");
 
     let cfg = Config::read(Some(&home));
@@ -89,25 +85,21 @@ fn configure_local_backend(home: &Path) -> LocalBackend {
 
 pub fn configure_test_environment<Env>(home: &Path, env_name: Env)
 where
-    Env: Into<String>
+    Env: Into<String>,
 {
     let mut config = Config::read(Some(&home)).expect("no configuration file");
     let env_name = env_name.into();
 
     let environment = match env_name.as_ref() {
         "default" => lal::Environment::None,
-        "alpine" =>  lal::Environment::Container(
-            lal::Container{
-                name: "clux/lal-alpine".to_string(),
-                tag: "3.6".to_string(),
-            }
-        ),
-        "xenial" =>  lal::Environment::Container(
-            lal::Container{
-                name: "clux/lal-xenial".to_string(),
-                tag: "latest".to_string(),
-            }
-        ),
+        "alpine" => lal::Environment::Container(lal::Container {
+            name: "clux/lal-alpine".to_string(),
+            tag: "3.6".to_string(),
+        }),
+        "xenial" => lal::Environment::Container(lal::Container {
+            name: "clux/lal-xenial".to_string(),
+            tag: "latest".to_string(),
+        }),
         _ => panic!("Unknown environment"),
     };
 
@@ -198,7 +190,13 @@ pub fn stash_component(
     let build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest)?;
 
     fetch::fetch_input(&component_dir, &env_name, &state.backend)?;
-    build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts)?;
+    build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    )?;
     stash::stash(&component_dir, &state.backend, stash_name)?;
 
     Ok(component_dir)

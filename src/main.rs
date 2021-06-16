@@ -149,7 +149,8 @@ fn handle_env_command(
     stickies: &StickyOptions,
 ) -> Environment {
     // lookup associated container from
-    let environment = mf.get_environment(env)
+    let environment = mf
+        .get_environment(env)
         .or_else(|_| cfg.get_environment(env))
         .map_err(|e| {
             error!("Environment error: {}", e);
@@ -171,7 +172,13 @@ fn handle_env_command(
         } else if let Some(sa) = a.subcommand_matches("set") {
             result_exit(
                 "env override",
-                lal::env::set(&component_dir, stickies, cfg, mf, sa.value_of("environment").unwrap()),
+                lal::env::set(
+                    &component_dir,
+                    stickies,
+                    cfg,
+                    mf,
+                    sa.value_of("environment").unwrap(),
+                ),
             )
         } else {
             // just print current environment
@@ -301,10 +308,7 @@ fn main() {
 
     // Allow lal configure without assumptions
     if let Some(_a) = args.subcommand_matches("configure") {
-        result_exit(
-            "configure",
-            lal::configure(true, true, None),
-        );
+        result_exit("configure", lal::configure(true, true, None));
     }
 
     // Force config to exists before allowing remaining actions

@@ -34,10 +34,17 @@ fn test_build_with_force(env_name: &str) {
     assert!(r.is_ok(), "installed heylib dependencies");
 
     // Force build the component
-    let mut build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let mut build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
     build_opts.force = true;
 
-    let r = build::build_with_options(&component_dir, &manifest, &env_name, &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        &env_name,
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(r.is_ok(), "built heylib with force");
 }
 
@@ -56,10 +63,17 @@ fn test_build_with_force_in_wrong_environment(env_name: &str) {
     assert!(r.is_ok(), "installed heylib dependencies");
 
     // Force build the component
-    let mut build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let mut build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
     build_opts.force = true;
 
-    let r = build::build_with_options(&component_dir, &manifest, "nonexistant", &state.tempdir.path(), &build_opts);
+    let r = build::build_with_options(
+        &component_dir,
+        &manifest,
+        "nonexistant",
+        &state.tempdir.path(),
+        &build_opts,
+    );
     assert!(r.is_ok(), "built heylib with force in nonexistant environment");
 }
 
@@ -78,7 +92,8 @@ fn test_build_with_printonly(env_name: &str) {
     assert!(r.is_ok(), "installed heylib dependencies");
 
     // Default build options
-    let build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
+    let build_opts =
+        build::options(Some(&state.tempdir.path()), &env_name, &manifest).expect("build options");
 
     // Print commands, don't execute
     let mut modes = lal::ShellModes::default();
