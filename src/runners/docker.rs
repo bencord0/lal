@@ -2,6 +2,7 @@ use std::{path::Path, process::Command, vec::Vec};
 
 use super::COMMAND_LOCK;
 use crate::core::{CliError, Config, Container, LalResult};
+use super::COMMAND_LOCK;
 
 /// Flags for docker run that vary for different use cases
 ///
