@@ -21,11 +21,14 @@ path = "src/main.rs"
 
 [dependencies]
 ansi_term = "0.12.1"
+async-trait = "0.1.50"
+base64 = "0.13.0"
 chrono = "0.4"
 clap = "2"
+dirs = "3.0.2"
 filetime = "0.2"
 flate2 = "1.0.20"
-hyper = "0.10"
+hyper = { version = "0.14", features = ["full"] }
 indicatif = { version = "0.16.2", optional = true }
 lazy_static = "1.4.0"
 log = "0.4.14"
@@ -33,14 +36,15 @@ loggerv = "0.7.2"
 openssl-probe = "0.1.4"
 rand = "0.8.3"
 regex = "1.5.4"
+reqwest = "0.11.3"
 semver = "1.0.3"
 serde = { version = "1.0.110", features = ["derive"] }
 serde_json = "1.0.64"
 sha1 = "0.6.0"
 tar = "0.4.35"
-walkdir = "2.3.2"
-dirs = "3.0.2"
 tempfile = "3"
+tokio = { version = "1.7.1", features = ["full"] }
+walkdir = "2.3.2"
 
 [features]
 default = ["docker", "progress"]
