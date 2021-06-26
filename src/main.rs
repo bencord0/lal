@@ -23,7 +23,7 @@ fn get_backend(config: &Config) -> Box<dyn CachedBackend> {
 }
 
 // functions that work without a manifest, and thus can run without a set env
-fn handle_manifest_agnostic_cmds(
+async fn handle_manifest_agnostic_cmds(
     args: &ArgMatches<'_>,
     cfg: &Config,
     component_dir: &Path,
@@ -32,7 +32,7 @@ fn handle_manifest_agnostic_cmds(
 ) {
     let res = if let Some(a) = args.subcommand_matches("export") {
         let curdir = current_dir().unwrap();
-        lal::export(backend, a.value_of("component").unwrap(), &curdir, explicit_env)
+        lal::export(backend, a.value_of("component").unwrap(), &curdir, explicit_env).await
     } else if let Some(a) = args.subcommand_matches("query") {
         lal::query(
             backend,
@@ -40,8 +40,9 @@ fn handle_manifest_agnostic_cmds(
             a.value_of("component").unwrap(),
             a.is_present("latest"),
         )
+        .await
     } else if let Some(a) = args.subcommand_matches("publish") {
-        lal::publish(None, &component_dir, a.value_of("component").unwrap(), backend)
+        lal::publish(None, &component_dir, a.value_of("component").unwrap(), backend).await
     } else if args.subcommand_matches("list-environments").is_some() {
         lal::list::environments(cfg)
     } else {
@@ -101,7 +102,7 @@ fn handle_environment_agnostic_cmds(
     result_exit(args.subcommand_name().unwrap(), res);
 }
 
-fn handle_network_cmds(
+async fn handle_network_cmds(
     args: &ArgMatches<'_>,
     component_dir: &Path,
     mf: &Manifest,
@@ -123,6 +124,7 @@ fn handle_network_cmds(
             a.is_present("savedev"),
             env,
         )
+        .await
     } else if let Some(a) = args.subcommand_matches("update-all") {
         lal::update_all(
             &component_dir,
@@ -132,8 +134,9 @@ fn handle_network_cmds(
             a.is_present("dev"),
             env,
         )
+        .await
     } else if let Some(a) = args.subcommand_matches("fetch") {
-        lal::fetch(&component_dir, mf, backend, a.is_present("core"), env)
+        lal::fetch(&component_dir, mf, backend, a.is_present("core"), env).await
     } else {
         return; // not a network cmnd
     };
@@ -294,7 +297,8 @@ fn handle_docker_cmds(
     result_exit(args.subcommand_name().unwrap(), res);
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> LalResult<()> {
     let app = lal::app::new();
     let args = app.get_matches();
 
@@ -303,8 +307,7 @@ fn main() {
         .verbosity(args.occurrences_of("verbose") + 1)
         .module_path(true)
         .line_numbers(args.is_present("debug"))
-        .init()
-        .unwrap();
+        .init()?;
 
     // Allow lal configure without assumptions
     if let Some(_a) = args.subcommand_matches("configure") {
@@ -369,7 +372,7 @@ fn main() {
             })
             .unwrap();
     }
-    handle_manifest_agnostic_cmds(&args, &config, &component_dir, backend.deref(), explicit_env);
+    handle_manifest_agnostic_cmds(&args, &config, &component_dir, backend.deref(), explicit_env).await?;
 
     // Force manifest to exist before allowing remaining actions
     let manifest = Manifest::read(&component_dir)
@@ -408,7 +411,7 @@ fn main() {
     }
 
     // Main subcommands
-    handle_network_cmds(&args, &component_dir, &manifest, backend.deref(), &env);
+    handle_network_cmds(&args, &component_dir, &manifest, backend.deref(), &env).await;
     handle_docker_cmds(&args, &component_dir, &manifest, &config, &env, &environment);
 
     unreachable!("Subcommand valid, but not implemented");

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-pub fn update(
+pub async fn update(
     component_dir: &Path,
     env_name: &str,
     backend: &dyn lal::CachedBackend,
@@ -21,19 +21,19 @@ pub fn update(
         false,
         false,
         &env_name,
-    )
+    ).await
 }
 
-pub fn update_all(
+pub async fn update_all(
     component_dir: &Path,
     env_name: &str,
     backend: &dyn lal::CachedBackend,
 ) -> lal::LalResult<()> {
     let manifest = lal::Manifest::read(&component_dir)?;
-    lal::update_all(&component_dir, &manifest, backend, false, false, &env_name)
+    lal::update_all(&component_dir, &manifest, backend, false, false, &env_name).await
 }
 
-pub fn update_with_save(
+pub async fn update_with_save(
     component_dir: &Path,
     env_name: &str,
     backend: &dyn lal::CachedBackend,
@@ -56,10 +56,10 @@ pub fn update_with_save(
         save,
         savedev,
         &env_name,
-    )
+    ).await
 }
 
-pub fn update_all_with_save(
+pub async fn update_all_with_save(
     component_dir: &Path,
     env_name: &str,
     backend: &dyn lal::CachedBackend,
@@ -67,5 +67,5 @@ pub fn update_all_with_save(
     savedev: bool,
 ) -> lal::LalResult<()> {
     let manifest = lal::Manifest::read(&component_dir)?;
-    lal::update_all(&component_dir, &manifest, backend, save, savedev, &env_name)
+    lal::update_all(&component_dir, &manifest, backend, save, savedev, &env_name).await
 }

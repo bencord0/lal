@@ -8,7 +8,7 @@ use crate::storage::CachedBackend;
 ///
 /// Meant to be done after a `lal build -r <component>`
 /// and requires publish credentials in the local `Config`.
-pub fn publish(
+pub async fn publish(
     home: Option<&Path>,
     component_dir: &Path,
     name: &str,
@@ -37,7 +37,9 @@ pub fn publish(
     let envname = lock.envname;
 
     info!("Publishing {}={} to {}", name, version, envname);
-    backend.publish_artifact(home, &component_dir, name, version, &envname)?;
+    backend
+        .publish_artifact(home, &component_dir, name, version, &envname)
+        .await?;
 
     Ok(())
 }

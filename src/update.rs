@@ -10,7 +10,7 @@ use std::{cmp::Ordering, path::Path};
 /// If installation was successful, the fetched tarballs are unpacked into `./INPUT`.
 /// If one `save` or `savedev` was set, the fetched versions are also updated in the
 /// manifest. This provides an easy way to not have to deal with strict JSON manually.
-pub fn update(
+pub async fn update(
     component_dir: &Path,
     manifest: &Manifest,
     backend: &dyn CachedBackend,
@@ -32,7 +32,10 @@ pub fn update(
                     return Err(CliError::InvalidComponentName(pair[0].into()));
                 }
                 // standard fetch with an integer version
-                match backend.unpack_published_component(&component_dir, pair[0], Some(n), env) {
+                match backend
+                    .unpack_published_component(&component_dir, pair[0], Some(n), env)
+                    .await
+                {
                     Ok(c) => updated.push(c),
                     Err(e) => {
                         warn!("Failed to update {} ({})", pair[0], e);
@@ -57,7 +60,9 @@ pub fn update(
 
             // First, since this potentially goes in the manifest
             // make sure the version is found for all supported environments:
-            let supported_versions = backend.get_latest_supported_versions(comp, vec![env.to_string()])?;
+            let supported_versions = backend
+                .get_latest_supported_versions(comp, vec![env.to_string()])
+                .await?;
 
             let ver = supported_versions
                 .into_iter()
@@ -65,7 +70,10 @@ pub fn update(
                 .ok_or_else(|| CliError::NoIntersectedVersion(comp.clone()))?;
             info!("Fetch {} {}={}", env, comp, ver);
 
-            match backend.unpack_published_component(&component_dir, comp, Some(ver), env) {
+            match backend
+                .unpack_published_component(&component_dir, comp, Some(ver), env)
+                .await
+            {
                 Ok(c) => updated.push(c),
                 Err(e) => {
                     warn!("Failed to update {} ({})", &comp, e);
@@ -116,7 +124,7 @@ pub fn update(
 /// This will pass all dependencies or devDependencies to update.
 /// If the save flag is set, then the manifest will be updated correctly.
 /// I.e. dev updates will update only the dev portions of the manifest.
-pub fn update_all(
+pub async fn update_all(
     component_dir: &Path,
     manifest: &Manifest,
     backend: &dyn CachedBackend,
@@ -138,4 +146,5 @@ pub fn update_all(
         save && dev,
         env,
     )
+    .await
 }

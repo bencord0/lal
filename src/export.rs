@@ -4,7 +4,12 @@ use super::{CliError, LalResult};
 use crate::storage::CachedBackend;
 
 /// Export a specific component from the storage backend
-pub fn export(backend: &dyn CachedBackend, comp: &str, output: &Path, _env: Option<&str>) -> LalResult<()> {
+pub async fn export(
+    backend: &dyn CachedBackend,
+    comp: &str,
+    output: &Path,
+    _env: Option<&str>,
+) -> LalResult<()> {
     let env = match _env {
         None => {
             error!("export is no longer allowed without an explicit environment");
@@ -25,7 +30,10 @@ pub fn export(backend: &dyn CachedBackend, comp: &str, output: &Path, _env: Opti
         if let Ok(n) = pair[1].parse::<u32>() {
             // standard fetch with an integer version
             component_name = pair[0]; // save so we have sensible tarball names
-            backend.retrieve_published_component(pair[0], Some(n), env)?.0
+            backend
+                .retrieve_published_component(pair[0], Some(n), env)
+                .await?
+                .0
         } else {
             // string version -> stash
             component_name = pair[0]; // save so we have sensible tarball names
@@ -33,7 +41,7 @@ pub fn export(backend: &dyn CachedBackend, comp: &str, output: &Path, _env: Opti
         }
     } else {
         // fetch without a specific version (latest)
-        backend.retrieve_published_component(comp, None, env)?.0
+        backend.retrieve_published_component(comp, None, env).await?.0
     };
 
     let dest = output.join(format!("{}.tar.gz", component_name));

@@ -2,57 +2,63 @@ use crate::common::*;
 use parameterized_macro::parameterized;
 
 #[parameterized(env_name = {"default", "alpine"})]
-pub fn test_clean_keep_1_day(env_name: &str) {
+fn test_clean_keep_1_day(env_name: &str) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;
     }
 
-    let config = lal::Config::read(Some(&state.tempdir.path())).expect("read config");
+    state.rt.block_on(async {
+        let config = lal::Config::read(Some(&state.tempdir.path())).expect("read config");
 
-    publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
-        .expect("published heylib=1 helloworld=1");
+        publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
+            .await
+            .expect("published heylib=1 helloworld=1");
 
-    let keep_days = 1;
-    let r = lal::clean(&config.cache, keep_days);
-    assert!(r.is_ok(), "keeping 1 day of cached artifacts");
+        let keep_days = 1;
+        let r = lal::clean(&config.cache, keep_days);
+        assert!(r.is_ok(), "keeping 1 day of cached artifacts");
 
-    // Fresh components are kept
-    let mut dirs = walkdir::WalkDir::new(&config.cache)
-        .min_depth(3)
-        .max_depth(3)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().is_dir());
+        // Fresh components are kept
+        let mut dirs = walkdir::WalkDir::new(&config.cache)
+            .min_depth(3)
+            .max_depth(3)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir());
 
-    let first = dirs.next();
-    assert!(first.is_some(), "some artifacts cached since last time");
+        let first = dirs.next();
+        assert!(first.is_some(), "some artifacts cached since last time");
+    });
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
-pub fn test_clean_keep_nothing(env_name: &str) {
+fn test_clean_keep_nothing(env_name: &str) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;
     }
 
-    let config = lal::Config::read(Some(&state.tempdir.path())).expect("read config");
+    state.rt.block_on(async {
+        let config = lal::Config::read(Some(&state.tempdir.path())).expect("read config");
 
-    publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
-        .expect("published heylib=1 helloworld=1");
+        publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
+            .await
+            .expect("published heylib=1 helloworld=1");
 
-    let keep_days = 0;
-    let r = lal::clean(&config.cache, keep_days);
-    assert!(r.is_ok(), "keeping 0 days of cached artifacts");
+        let keep_days = 0;
+        let r = lal::clean(&config.cache, keep_days);
+        assert!(r.is_ok(), "keeping 0 days of cached artifacts");
 
-    // Fresh components are kept
-    let mut dirs = walkdir::WalkDir::new(&config.cache)
-        .min_depth(3)
-        .max_depth(3)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().is_dir());
+        // Fresh components are kept
+        let mut dirs = walkdir::WalkDir::new(&config.cache)
+            .min_depth(3)
+            .max_depth(3)
+            .into_iter()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir());
 
-    let first = dirs.next();
-    assert!(first.is_none(), "no artifacts left in cache");
+        let first = dirs.next();
+        assert!(first.is_none(), "no artifacts left in cache");
+    });
 }

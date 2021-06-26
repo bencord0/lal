@@ -8,12 +8,14 @@ fn test_list_environments(env_name: &str) {
         return;
     }
 
-    let r = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1");
-    assert!(r.is_ok(), "published heylib=1 helloworld=1");
+    state.rt.block_on(async {
+        let r = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1").await;
+        assert!(r.is_ok(), "published heylib=1 helloworld=1");
 
-    // TODO: Assert output
-    let r = list::list_environments(&state.tempdir.path());
-    assert!(r.is_ok(), "list environments");
+        // TODO: Assert output
+        let r = list::list_environments(&state.tempdir.path());
+        assert!(r.is_ok(), "list environments");
+    });
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
@@ -23,13 +25,16 @@ fn test_list_core_dependencies(env_name: &str) {
         return;
     }
 
-    let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
-        .expect("published heylib=1 helloworld=1");
+    state.rt.block_on(async {
+        let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
+            .await
+            .expect("published heylib=1 helloworld=1");
 
-    // TODO: Assert output
-    let core = true;
-    let r = list::list_dependencies(&component_dir, core);
-    assert!(r.is_ok(), "list core dependencies");
+        // TODO: Assert output
+        let core = true;
+        let r = list::list_dependencies(&component_dir, core);
+        assert!(r.is_ok(), "list core dependencies");
+    });
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
@@ -39,13 +44,16 @@ fn test_list_all_dependencies(env_name: &str) {
         return;
     }
 
-    let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
-        .expect("published heylib=1 helloworld=1");
+    state.rt.block_on(async {
+        let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
+            .await
+            .expect("published heylib=1 helloworld=1");
 
-    // TODO: Assert output
-    let core = false;
-    let r = list::list_dependencies(&component_dir, core);
-    assert!(r.is_ok(), "list all dependencies");
+        // TODO: Assert output
+        let core = false;
+        let r = list::list_dependencies(&component_dir, core);
+        assert!(r.is_ok(), "list all dependencies");
+    });
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
@@ -55,11 +63,14 @@ fn test_list_configurations(env_name: &str) {
         return;
     }
 
-    let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
-        .expect("published heylib=1 helloworld=1");
+    state.rt.block_on(async {
+        let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
+            .await
+            .expect("published heylib=1 helloworld=1");
 
-    let r = list::list_configurations(&component_dir);
-    assert!(r.is_ok(), "list configurations");
+        let r = list::list_configurations(&component_dir);
+        assert!(r.is_ok(), "list configurations");
+    });
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
@@ -69,9 +80,12 @@ fn test_list_buildables(env_name: &str) {
         return;
     }
 
-    let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
-        .expect("published heylib=1 helloworld=1");
+    state.rt.block_on(async {
+        let component_dir = publish_components(&state, &env_name, vec!["heylib", "helloworld"], "1")
+            .await
+            .expect("published heylib=1 helloworld=1");
 
-    let r = list::list_buildables(&component_dir);
-    assert!(r.is_ok(), "list buildables");
+        let r = list::list_buildables(&component_dir);
+        assert!(r.is_ok(), "list buildables");
+    });
 }

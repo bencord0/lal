@@ -78,17 +78,22 @@ fn extract_tarball_to_input(tarname: PathBuf, component_dir: &Path, component: &
 ///
 /// Most subcommands should be OK with just using this trait rather than using
 /// `Backend` directly as this does the stuff you normally would want done.
-impl<T: Backend> CachedBackend for T {
+#[async_trait::async_trait]
+impl<T: Backend + Sync> CachedBackend for T {
     /// Get the latest versions of a component across all supported environments
     ///
     /// Because the versions have to be available in all environments, these numbers may
     /// not contain the highest numbers available on specific environments.
-    fn get_latest_supported_versions(&self, name: &str, environments: Vec<String>) -> LalResult<Vec<u32>> {
+    async fn get_latest_supported_versions(
+        &self,
+        name: &str,
+        environments: Vec<String>,
+    ) -> LalResult<Vec<u32>> {
         use std::collections::BTreeSet;
         let mut result = BTreeSet::new();
         let mut first_pass = true;
         for e in environments {
-            let eres: BTreeSet<_> = self.get_versions(name, &e)?.into_iter().take(100).collect();
+            let eres: BTreeSet<_> = self.get_versions(name, &e).await?.into_iter().take(100).collect();
             info!("Last versions for {} in {} env is {:?}", name, e, eres);
             if first_pass {
                 // if first pass, can't take intersection with something empty, start with first result
@@ -103,7 +108,7 @@ impl<T: Backend> CachedBackend for T {
     }
 
     /// Locate a proper component, downloading it and caching if necessary
-    fn retrieve_published_component(
+    async fn retrieve_published_component(
         &self,
         name: &str,
         version: Option<u32>,
@@ -111,12 +116,12 @@ impl<T: Backend> CachedBackend for T {
     ) -> LalResult<(PathBuf, Component)> {
         trace!("Locate component {}", name);
 
-        let component = self.get_component_info(name, version, env)?;
+        let component = self.get_component_info(name, version, env).await?;
 
         if !is_cached(self, &component.name, component.version, env) {
             // download to PWD then move it to stash immediately
             let tarball_location = stored_tarball_location(self, name, component.version, env)?;
-            self.raw_fetch(&component.location, &tarball_location)?;
+            self.raw_fetch(&component.location, &tarball_location).await?;
         }
         assert!(
             is_cached(self, &component.name, component.version, env),
@@ -130,20 +135,16 @@ impl<T: Backend> CachedBackend for T {
     }
 
     // basic functionality for `fetch`/`update`
-    fn unpack_published_component(
+    async fn unpack_published_component(
         &self,
         component_dir: &Path,
         name: &str,
         version: Option<u32>,
         env: &str,
     ) -> LalResult<Component> {
-        let (tarname, component) = self.retrieve_published_component(name, version, env)?;
+        let (tarname, component) = self.retrieve_published_component(name, version, env).await?;
 
-        debug!(
-            "Unpacking tarball {} for {}",
-            tarname.to_str().unwrap(),
-            component.name
-        );
+        debug!("Unpacking tarball {:?} for {}", tarname, component.name);
         extract_tarball_to_input(tarname, &component_dir, name)?;
 
         Ok(component)

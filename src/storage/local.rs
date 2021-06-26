@@ -26,18 +26,19 @@ pub struct LocalBackend {
 }
 
 impl LocalBackend {
-    pub fn new(cfg: &LocalConfig, cache: &Path) -> Self {
+    pub fn new(cfg: &LocalConfig, cache: &Path) -> LalResult<Self> {
         match fs::create_dir(&cache) {
             Ok(()) => Ok(()),
             Err(ref e) if e.kind() == ErrorKind::AlreadyExists => Ok(()),
             Err(e) => Err(e),
-        }
-        .unwrap();
+        }?;
 
-        LocalBackend {
+        let backend = LocalBackend {
             config: cfg.clone(),
             cache: cache.to_path_buf(),
-        }
+        };
+
+        Ok(backend)
     }
 }
 
@@ -45,8 +46,9 @@ impl LocalBackend {
 ///
 /// This is intended to be used by the caching trait `CachedBackend`, but for
 /// specific low-level use cases, these methods can be used directly.
+#[async_trait::async_trait]
 impl Backend for LocalBackend {
-    fn get_versions(&self, name: &str, loc: &str) -> LalResult<Vec<u32>> {
+    async fn get_versions(&self, name: &str, loc: &str) -> LalResult<Vec<u32>> {
         let tar_dir = format!("{}/environments/{}/{}/", self.cache.display(), loc, name);
         let dentries = fs::read_dir(config_dir(None).join(tar_dir));
         let mut versions = vec![];
@@ -61,8 +63,8 @@ impl Backend for LocalBackend {
         Ok(versions)
     }
 
-    fn get_latest_version(&self, name: &str, loc: &str) -> LalResult<u32> {
-        if let Some(&last) = self.get_versions(name, loc)?.last() {
+    async fn get_latest_version(&self, name: &str, loc: &str) -> LalResult<u32> {
+        if let Some(&last) = self.get_versions(name, loc).await?.last() {
             return Ok(last);
         }
         Err(CliError::BackendFailure(
@@ -70,13 +72,13 @@ impl Backend for LocalBackend {
         ))
     }
 
-    fn get_component_info(&self, name: &str, version: Option<u32>, loc: &str) -> LalResult<Component> {
+    async fn get_component_info(&self, name: &str, version: Option<u32>, loc: &str) -> LalResult<Component> {
         info!("get_component_info: {} {:?} {}", name, version, loc);
 
         let v = if let Some(ver) = version {
             ver
         } else {
-            self.get_latest_version(name, loc)?
+            self.get_latest_version(name, loc).await?
         };
         let loc = format!(
             "{}/environments/{}/{}/{}/{}.tar.gz",
@@ -93,7 +95,7 @@ impl Backend for LocalBackend {
         })
     }
 
-    fn publish_artifact(
+    async fn publish_artifact(
         &self,
         home: Option<&Path>,
         component_dir: &Path,
@@ -144,7 +146,7 @@ impl Backend for LocalBackend {
         self.cache.clone()
     }
 
-    fn raw_fetch(&self, src: &str, dest: &Path) -> LalResult<()> {
+    async fn raw_fetch(&self, src: &str, dest: &Path) -> LalResult<()> {
         debug!("raw fetch {} -> {}", src, dest.display());
         fs::copy(src, dest)?;
         Ok(())

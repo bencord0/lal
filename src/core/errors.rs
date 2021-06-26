@@ -1,4 +1,4 @@
-use std::{fmt, io};
+use std::{fmt, io, num, path};
 
 /// The one and only error type for the lal library
 ///
@@ -9,12 +9,20 @@ use std::{fmt, io};
 pub enum CliError {
     /// Errors propagated from `std::fs`
     Io(io::Error),
+    /// Errors propagated from `std::path`
+    Path(path::StripPrefixError),
+    /// Errors propagated from `walkdir`
+    WalkDir(walkdir::Error),
     /// Errors propagated from `serde_json`
     Parse(serde_json::error::Error),
+    /// Errors propagated from `std::num`
+    ParseInt(num::ParseIntError),
     /// Errors propagated from `hyper`
     Hype(hyper::Error),
     /// Errors propagated from `semver`
     SemVer(semver::Error),
+    /// Errors propagated from `log`
+    Log(log::SetLoggerError),
 
     // main errors
     /// Manifest file not found in working directory
@@ -51,6 +59,8 @@ pub enum CliError {
     MissingLockfile(String),
     /// Multiple versions of a component was involved in this build
     MultipleVersions(String),
+    /// No environment used to build a component
+    MissingExpectedEnvironment(String),
     /// Multiple environments was used to build a component
     MultipleEnvironments(String),
     /// Environment for a component did not match our expected environment
@@ -136,9 +146,13 @@ impl fmt::Display for CliError {
                 }
                 err.fmt(f)
             }
+            CliError::Path(ref err) => err.fmt(f),
+            CliError::WalkDir(ref err) => err.fmt(f),
             CliError::Parse(ref err) => err.fmt(f),
+            CliError::ParseInt(ref err) => err.fmt(f),
             CliError::Hype(ref err) => err.fmt(f),
             CliError::SemVer(ref err) => err.fmt(f),
+            CliError::Log(ref err) => err.fmt(f),
             CliError::MissingManifest => {
                 write!(f, "No manifest.json found - are you at repository toplevel?")
             }
@@ -169,6 +183,9 @@ impl fmt::Display for CliError {
             CliError::ExtraneousDependencies(ref s) => write!(f, "Extraneous dependencies in INPUT ({})", s),
             CliError::MissingLockfile(ref s) => write!(f, "No lockfile found for {}", s),
             CliError::MultipleVersions(ref s) => write!(f, "Depending on multiple versions of {}", s),
+            CliError::MissingExpectedEnvironment(ref s) => {
+                write!(f, "Environment missing: expected {}", s)
+            }
             CliError::MultipleEnvironments(ref s) => {
                 write!(f, "Depending on multiple environments to build {}", s)
             }
@@ -239,6 +256,18 @@ impl From<io::Error> for CliError {
     }
 }
 
+impl From<path::StripPrefixError> for CliError {
+    fn from(err: path::StripPrefixError) -> CliError {
+        CliError::Path(err)
+    }
+}
+
+impl From<walkdir::Error> for CliError {
+    fn from(err: walkdir::Error) -> CliError {
+        CliError::WalkDir(err)
+    }
+}
+
 impl From<hyper::Error> for CliError {
     fn from(err: hyper::Error) -> CliError {
         CliError::Hype(err)
@@ -251,9 +280,21 @@ impl From<semver::Error> for CliError {
     }
 }
 
+impl From<log::SetLoggerError> for CliError {
+    fn from(err: log::SetLoggerError) -> CliError {
+        CliError::Log(err)
+    }
+}
+
 impl From<serde_json::error::Error> for CliError {
     fn from(err: serde_json::error::Error) -> CliError {
         CliError::Parse(err)
+    }
+}
+
+impl From<num::ParseIntError> for CliError {
+    fn from(err: num::ParseIntError) -> CliError {
+        CliError::ParseInt(err)
     }
 }
 

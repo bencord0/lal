@@ -4,7 +4,12 @@ use super::{CliError, LalResult};
 use crate::storage::CachedBackend;
 
 /// Prints a list of versions associated with a component
-pub fn query(backend: &dyn CachedBackend, _env: Option<&str>, component: &str, last: bool) -> LalResult<()> {
+pub async fn query(
+    backend: &dyn CachedBackend,
+    _env: Option<&str>,
+    component: &str,
+    last: bool,
+) -> LalResult<()> {
     if component.to_lowercase() != component {
         return Err(CliError::InvalidComponentName(component.into()));
     }
@@ -17,10 +22,10 @@ pub fn query(backend: &dyn CachedBackend, _env: Option<&str>, component: &str, l
     };
 
     if last {
-        let ver = backend.get_latest_version(component, env)?;
+        let ver = backend.get_latest_version(component, env).await?;
         println!("{}", ver);
     } else {
-        let vers = backend.get_versions(component, env)?;
+        let vers = backend.get_versions(component, env).await?;
         for v in vers {
             println!("{}", v);
             // needed because sigpipe handling is broken for stdout atm

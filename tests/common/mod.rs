@@ -14,8 +14,9 @@ use std::{
     path::{Path, PathBuf},
     sync::Once,
 };
+use tokio::runtime::Runtime;
 
-use lal::{BackendConfiguration, Config, LocalBackend};
+use lal::{BackendConfiguration, Config, LalResult, LocalBackend};
 
 pub mod build;
 pub mod envs;
@@ -31,6 +32,7 @@ pub mod update;
 pub mod verify;
 
 pub struct TestState {
+    pub rt: Runtime,
     pub backend: LocalBackend,
     pub testdir: PathBuf,
 
@@ -54,18 +56,21 @@ pub fn setup() -> TestState {
     // Do all lal tests in a tempdir as it messes with the manifest
     let tempdir = TempDir::new().unwrap();
 
-    let backend = configure_local_backend(&tempdir.path());
+    let backend = configure_local_backend(&tempdir.path()).unwrap();
     configure_test_environment(&tempdir.path(), "default");
     configure_test_environment(&tempdir.path(), "alpine");
 
+    let rt = Runtime::new().unwrap();
+
     TestState {
+        rt,
         backend,
         tempdir,
         testdir,
     }
 }
 
-fn configure_local_backend(home: &Path) -> LocalBackend {
+fn configure_local_backend(home: &Path) -> LalResult<LocalBackend> {
     let config = Config::read(Some(&home));
     assert!(config.is_err(), "no config at this point");
 
@@ -77,10 +82,12 @@ fn configure_local_backend(home: &Path) -> LocalBackend {
 
     let cfgu = cfg.unwrap();
 
-    match &cfgu.backend {
-        &BackendConfiguration::Local(ref local_cfg) => LocalBackend::new(&local_cfg, &cfgu.cache),
+    let backend = match &cfgu.backend {
+        &BackendConfiguration::Local(ref local_cfg) => LocalBackend::new(&local_cfg, &cfgu.cache)?,
         _ => unreachable!(), // demo.json uses local backend
-    }
+    };
+
+    Ok(backend)
 }
 
 pub fn configure_test_environment<Env>(home: &Path, env_name: Env)
@@ -124,7 +131,7 @@ pub fn clone_component_dir(component: &str, state: &TestState) -> PathBuf {
     return to;
 }
 
-pub fn publish_component(
+pub async fn publish_component(
     state: &TestState,
     env_name: &str,
     component: &str,
@@ -132,14 +139,14 @@ pub fn publish_component(
 ) -> lal::LalResult<PathBuf> {
     let component_dir = clone_component_dir(component, &state);
 
-    fetch::fetch_input(&component_dir, &env_name, &state.backend)?;
+    fetch::fetch_input(&component_dir, &env_name, &state.backend).await?;
     build::build_for_release(&component_dir, &env_name, &state.tempdir.path(), version)?;
-    publish::publish_release(&component_dir, &state.backend, &state.tempdir.path())?;
+    publish::publish_release(&component_dir, &state.backend, &state.tempdir.path()).await?;
 
     Ok(component_dir)
 }
 
-pub fn publish_components(
+pub async fn publish_components(
     state: &TestState,
     env_name: &str,
     components: Vec<&str>,
@@ -147,7 +154,7 @@ pub fn publish_components(
 ) -> lal::LalResult<PathBuf> {
     let mut component_dirs = Vec::<PathBuf>::new();
     for component in components {
-        let component_dir = publish_component(&state, &env_name, &component, &version)?;
+        let component_dir = publish_component(&state, &env_name, &component, &version).await?;
         component_dirs.push(component_dir);
     }
 
@@ -159,7 +166,7 @@ pub fn publish_components(
     }
 }
 
-pub fn publish_component_versions(
+pub async fn publish_component_versions(
     state: &TestState,
     env_name: &str,
     component: &str,
@@ -167,7 +174,7 @@ pub fn publish_component_versions(
 ) -> lal::LalResult<PathBuf> {
     let mut component_dirs = Vec::<PathBuf>::new();
     for version in versions {
-        let component_dir = publish_component(&state, &env_name, &component, &version)?;
+        let component_dir = publish_component(&state, &env_name, &component, &version).await?;
         component_dirs.push(component_dir);
     }
 
@@ -179,7 +186,7 @@ pub fn publish_component_versions(
     }
 }
 
-pub fn stash_component(
+pub async fn stash_component(
     state: &TestState,
     env_name: &str,
     component: &str,
@@ -189,7 +196,7 @@ pub fn stash_component(
     let manifest = lal::Manifest::read(&component_dir)?;
     let build_opts = build::options(Some(&state.tempdir.path()), &env_name, &manifest)?;
 
-    fetch::fetch_input(&component_dir, &env_name, &state.backend)?;
+    fetch::fetch_input(&component_dir, &env_name, &state.backend).await?;
     build::build_with_options(
         &component_dir,
         &manifest,

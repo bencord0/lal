@@ -4,19 +4,15 @@ use serde::{Deserialize, Serialize};
 use std::{
     fmt,
     fs::File,
-    io::{Read, Write},
+    io::Read,
     path::{Path, PathBuf},
     vec::Vec,
 };
+use tokio::{fs::File as AsyncFile, io::AsyncWriteExt as _};
 
 #[cfg(feature = "upgrade")] use semver::Version;
 
-use hyper::{
-    self,
-    header::{Authorization, Basic},
-    status::StatusCode,
-    Client,
-};
+use hyper::{body::HttpBody, Body, Client, Method, Request, StatusCode};
 
 use crate::core::{CliError, LalResult};
 
@@ -67,29 +63,19 @@ struct ArtifactoryStorageResponse {
 }
 
 // simple request body fetcher
-fn hyper_req(url: &str) -> LalResult<String> {
-    let client = Client::new();
-    let mut res = client.get(url).send()?;
-    if res.status != hyper::Ok {
-        return Err(CliError::BackendFailure(format!(
-            "GET request with {}",
-            res.status
-        )));
-    }
-    let mut body = String::new();
-    res.read_to_string(&mut body)?;
-    Ok(body)
+async fn hyper_req(url: &str) -> LalResult<String> {
+    Ok(reqwest::get(url).await.unwrap().text().await.unwrap().to_string())
 }
 
 // simple request downloader
-pub fn http_download_to_path(url: &str, save: &Path) -> LalResult<()> {
+pub async fn http_download_to_path(url: &str, save: &Path) -> LalResult<()> {
     debug!("GET {}", url);
     let client = Client::new();
-    let mut res = client.get(url).send()?;
-    if res.status != hyper::Ok {
+    let mut res = client.get(url.parse().unwrap()).await?;
+    if !res.status().is_success() {
         return Err(CliError::BackendFailure(format!(
             "GET request with {}",
-            res.status
+            res.status()
         )));
     }
 
@@ -97,28 +83,39 @@ pub fn http_download_to_path(url: &str, save: &Path) -> LalResult<()> {
         #[cfg(feature = "progress")]
         {
             use indicatif::{ProgressBar, ProgressStyle};
-            let total_size = res.headers.get::<hyper::header::ContentLength>().unwrap().0;
-            let mut downloaded = 0;
-            let mut buffer = [0; 1024 * 64];
-            let mut f = File::create(save)?;
+            let total_size: u64 = res
+                .headers()
+                .get("content-length")
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .parse()?;
+            let mut downloaded = 0u64;
             let pb = ProgressBar::new(total_size);
+
             pb.set_style(
                 ProgressStyle::default_bar().template("{bar:40.yellow/black} {bytes}/{total_bytes} ({eta})"),
             );
 
-            while downloaded < total_size {
-                let read = res.read(&mut buffer)?;
-                f.write_all(&buffer[0..read])?;
-                downloaded += read as u64;
+            let mut f = AsyncFile::create(save).await?;
+            while let Some(chunk) = res.body_mut().data().await {
+                let chunk = chunk?;
+                downloaded += chunk.len() as u64;
                 pb.set_position(downloaded);
+
+                f.write_all(&chunk).await?;
             }
-            f.flush()?;
+
+            f.flush().await?;
         }
     } else {
-        let mut buffer: Vec<u8> = Vec::new();
-        res.read_to_end(&mut buffer)?;
-        let mut f = File::create(save)?;
-        f.write_all(&buffer)?;
+        let mut f = AsyncFile::create(save).await?;
+
+        while let Some(chunk) = res.body_mut().data().await {
+            f.write_all(&chunk?).await?;
+        }
+
+        f.flush().await?;
     }
     Ok(())
 }
@@ -127,15 +124,15 @@ pub fn http_download_to_path(url: &str, save: &Path) -> LalResult<()> {
 ///
 /// This will get, then parse all results as u32s, and return this list.
 /// This assumes versoning is done via a single integer.
-fn get_storage_versions(uri: &str) -> LalResult<Vec<u32>> {
+async fn get_storage_versions(uri: &str) -> LalResult<Vec<u32>> {
     debug!("GET {}", uri);
 
-    let resp = hyper_req(uri).map_err(|e| {
+    let resp: String = hyper_req(uri).await.map_err(|e| {
         warn!("Failed to GET {}: {}", uri, e);
         CliError::BackendFailure("No version information found on API".into())
     })?;
 
-    trace!("Got body {}", resp);
+    trace!("{}", format!("Got body {}", resp));
 
     let res: ArtifactoryStorageResponse = serde_json::from_str(&resp)?;
     let mut builds: Vec<u32> = res
@@ -149,14 +146,10 @@ fn get_storage_versions(uri: &str) -> LalResult<Vec<u32>> {
     Ok(builds)
 }
 
-// artifactory extra headers
-header! {(XCheckSumDeploy, "X-Checksum-Deploy") => [String]}
-header! {(XCheckSumSha1, "X-Checksum-Sha1") => [String]}
-
 /// Upload a tarball to artifactory
 ///
 /// This is using a http basic auth PUT to artifactory using config credentials.
-fn upload_artifact(arti: &ArtifactoryConfig, uri: &str, f: &mut File) -> LalResult<()> {
+async fn upload_artifact(arti: &ArtifactoryConfig, uri: &str, f: &mut File) -> LalResult<()> {
     if let Some(creds) = arti.credentials.clone() {
         let client = Client::new();
 
@@ -168,21 +161,23 @@ fn upload_artifact(arti: &ArtifactoryConfig, uri: &str, f: &mut File) -> LalResu
         let mut sha = sha1::Sha1::new();
         sha.update(&buffer);
 
-        let auth = Authorization(Basic {
-            username: creds.username,
-            password: Some(creds.password),
-        });
+        let auth = format!("{}:{}", creds.username, creds.password);
+        let auth = format!("Basic {}", base64::encode(auth));
 
         // upload the artifact
         info!("PUT {}", full_uri);
-        let resp = client
-            .put(&full_uri[..])
-            .header(auth.clone())
-            .body(&buffer[..])
-            .send()?;
+        let request: Request<_> = Request::builder()
+            .method(Method::PUT)
+            .uri(&full_uri)
+            .header("Authorization", auth.clone())
+            .body(Body::from(buffer))
+            .unwrap();
+
+        let resp = client.request(request).await?;
+
         debug!("resp={:?}", resp);
-        let respstr = format!("{} from PUT {}", resp.status, full_uri);
-        if resp.status != StatusCode::Created {
+        let respstr = format!("{} from PUT {}", resp.status(), full_uri);
+        if resp.status() != StatusCode::CREATED {
             return Err(CliError::UploadFailure(respstr));
         }
         debug!("{}", respstr);
@@ -193,15 +188,19 @@ fn upload_artifact(arti: &ArtifactoryConfig, uri: &str, f: &mut File) -> LalResu
         // This `respsha` can fail if engci-maven becomes inconsistent. NotFound has been seen.
         // And that makes no sense because the above must have returned Created to get here..
         info!("PUT {} (X-Checksum-Sha1)", full_uri);
-        let respsha = client
-            .put(&full_uri[..])
-            .header(XCheckSumDeploy("true".into()))
-            .header(XCheckSumSha1(sha.digest().to_string()))
-            .header(auth)
-            .send()?;
+        let request: Request<_> = Request::builder()
+            .method(Method::PUT)
+            .uri(&full_uri[..])
+            .header("X-Checksum-Deploy", "true")
+            .header("X-Checksum-Sha1", sha.digest().to_string())
+            .header("Authorization", auth)
+            .body(Body::empty())
+            .unwrap();
+
+        let respsha = client.request(request).await?;
         debug!("respsha={:?}", respsha);
-        let respshastr = format!("{} from PUT {} (X-Checksum-Sha1)", respsha.status, full_uri);
-        if respsha.status != StatusCode::Created {
+        let respshastr = format!("{} from PUT {} (X-Checksum-Sha1)", respsha.status(), full_uri);
+        if respsha.status() != StatusCode::CREATED {
             return Err(CliError::UploadFailure(respshastr));
         }
         debug!("{}", respshastr);
@@ -213,8 +212,8 @@ fn upload_artifact(arti: &ArtifactoryConfig, uri: &str, f: &mut File) -> LalResu
 }
 
 /// Get the maximal version number from the storage api
-fn get_storage_as_u32(uri: &str) -> LalResult<u32> {
-    if let Some(&latest) = get_storage_versions(uri)?.iter().max() {
+async fn get_storage_as_u32(uri: &str) -> LalResult<u32> {
+    if let Some(&latest) = get_storage_versions(uri).await?.iter().max() {
         Ok(latest)
     } else {
         Err(CliError::BackendFailure(
@@ -239,12 +238,16 @@ fn get_dependency_env_url(art_cfg: &ArtifactoryConfig, name: &str, version: u32,
     tar_url
 }
 
-fn get_dependency_url_latest(art_cfg: &ArtifactoryConfig, name: &str, env: &str) -> LalResult<Component> {
+async fn get_dependency_url_latest(
+    art_cfg: &ArtifactoryConfig,
+    name: &str,
+    env: &str,
+) -> LalResult<Component> {
     let url = format!(
         "{}/api/storage/{}/{}/{}/{}",
         art_cfg.master, art_cfg.release, "env", env, name
     );
-    let v = get_storage_as_u32(&url)?;
+    let v = get_storage_as_u32(&url).await?;
 
     debug!("Found latest version as {}", v);
     Ok(Component {
@@ -256,17 +259,17 @@ fn get_dependency_url_latest(art_cfg: &ArtifactoryConfig, name: &str, env: &str)
 
 // This queries the API for the default location
 // if a default exists, then all our current multi-builds must exist
-fn get_latest_versions(art_cfg: &ArtifactoryConfig, name: &str, env: &str) -> LalResult<Vec<u32>> {
+async fn get_latest_versions(art_cfg: &ArtifactoryConfig, name: &str, env: &str) -> LalResult<Vec<u32>> {
     let url = format!(
         "{}/api/storage/{}/{}/{}/{}",
         art_cfg.master, art_cfg.release, "env", env, name
     );
 
-    get_storage_versions(&url)
+    get_storage_versions(&url).await
 }
 
 /// Main entry point for install
-fn get_tarball_uri(
+async fn get_tarball_uri(
     art_cfg: &ArtifactoryConfig,
     name: &str,
     version: Option<u32>,
@@ -279,7 +282,7 @@ fn get_tarball_uri(
             name: name.into(),
         })
     } else {
-        get_dependency_url_latest(art_cfg, name, env)
+        get_dependency_url_latest(art_cfg, name, env).await
     }
 }
 
@@ -303,7 +306,7 @@ pub fn get_latest_lal_version() -> LalResult<LatestLal> {
     // canonical latest url
     let uri = "https://engci-maven-master.cisco.com/artifactory/api/storage/CME-release/lal";
     debug!("GET {}", uri);
-    let resp = hyper_req(uri).map_err(|e| {
+    let resp: String = hyper_req(uri).map_err(|e| {
         warn!("Failed to GET {}: {}", uri, e);
         CliError::BackendFailure("No version information found on API".into())
     })?;
@@ -345,12 +348,14 @@ pub struct ArtifactoryBackend {
 }
 
 impl ArtifactoryBackend {
-    pub fn new(cfg: &ArtifactoryConfig, cache: &Path) -> Self {
+    pub fn new(cfg: &ArtifactoryConfig, cache: &Path) -> LalResult<Self> {
         // TODO: create hyper clients in here rather than once per download
-        ArtifactoryBackend {
+        let backend = ArtifactoryBackend {
             config: cfg.clone(),
             cache: cache.to_path_buf(),
-        }
+        };
+
+        Ok(backend)
     }
 }
 
@@ -358,21 +363,22 @@ impl ArtifactoryBackend {
 ///
 /// This is intended to be used by the caching trait `CachedBackend`, but for
 /// specific low-level use cases, these methods can be used directly.
+#[async_trait::async_trait]
 impl Backend for ArtifactoryBackend {
-    fn get_versions(&self, name: &str, loc: &str) -> LalResult<Vec<u32>> {
-        get_latest_versions(&self.config, name, loc)
+    async fn get_versions(&self, name: &str, loc: &str) -> LalResult<Vec<u32>> {
+        get_latest_versions(&self.config, name, loc).await
     }
 
-    fn get_latest_version(&self, name: &str, loc: &str) -> LalResult<u32> {
-        let latest = get_dependency_url_latest(&self.config, name, loc)?;
+    async fn get_latest_version(&self, name: &str, loc: &str) -> LalResult<u32> {
+        let latest = get_dependency_url_latest(&self.config, name, loc).await?;
         Ok(latest.version)
     }
 
-    fn get_component_info(&self, name: &str, version: Option<u32>, loc: &str) -> LalResult<Component> {
-        get_tarball_uri(&self.config, name, version, loc)
+    async fn get_component_info(&self, name: &str, version: Option<u32>, loc: &str) -> LalResult<Component> {
+        get_tarball_uri(&self.config, name, version, loc).await
     }
 
-    fn publish_artifact(
+    async fn publish_artifact(
         &self,
         _home: Option<&Path>,
         component_dir: &Path,
@@ -391,11 +397,11 @@ impl Backend for ArtifactoryBackend {
 
         let tar_uri = format!("{}{}/{}/{}.tar.gz", prefix, name, version, name);
         let mut tarf = File::open(tarball)?;
-        upload_artifact(&self.config, &tar_uri, &mut tarf)?;
+        upload_artifact(&self.config, &tar_uri, &mut tarf).await?;
 
         let mut lockf = File::open(lockfile)?;
         let lf_uri = format!("{}{}/{}/lockfile.json", prefix, name, version);
-        upload_artifact(&self.config, &lf_uri, &mut lockf)?;
+        upload_artifact(&self.config, &lf_uri, &mut lockf).await?;
         Ok(())
     }
 
@@ -403,7 +409,7 @@ impl Backend for ArtifactoryBackend {
         self.cache.clone()
     }
 
-    fn raw_fetch(&self, url: &str, dest: &Path) -> LalResult<()> {
-        http_download_to_path(url, dest)
+    async fn raw_fetch(&self, url: &str, dest: &Path) -> LalResult<()> {
+        http_download_to_path(url, dest).await
     }
 }

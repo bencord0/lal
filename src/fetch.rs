@@ -14,7 +14,7 @@ fn clean_input(component_dir: &Path) {
 ///
 /// This will read, and HTTP GET all the dependencies at the specified versions.
 /// If the `core` bool is set, then `devDependencies` are not installed.
-pub fn fetch(
+pub async fn fetch(
     component_dir: &Path,
     manifest: &Manifest,
     backend: &dyn CachedBackend,
@@ -82,6 +82,7 @@ pub fn fetch(
 
         let _ = backend
             .unpack_published_component(&component_dir, &k, Some(v), env)
+            .await
             .map_err(|e| {
                 warn!("Failed to completely install {} ({})", k, e);
                 // likely symlinks inside tarball that are being dodgy

@@ -45,21 +45,22 @@ pub struct Component {
 /// We are not really relying on Artifactory specific quirks in our default usage
 /// so that in case it fails it can be switched over.
 /// We do rely on there being a basic API that can implement this trait though.
+#[async_trait::async_trait]
 pub trait Backend {
     /// Get a list of versions for a component in descending order
-    fn get_versions(&self, name: &str, loc: &str) -> LalResult<Vec<u32>>;
+    async fn get_versions(&self, name: &str, loc: &str) -> LalResult<Vec<u32>>;
     /// Get the latest version of a component
-    fn get_latest_version(&self, name: &str, loc: &str) -> LalResult<u32>;
+    async fn get_latest_version(&self, name: &str, loc: &str) -> LalResult<u32>;
 
     /// Get the version and location information of a component
     ///
     /// If no version is given, figure out what latest is
-    fn get_component_info(&self, name: &str, ver: Option<u32>, loc: &str) -> LalResult<Component>;
+    async fn get_component_info(&self, name: &str, ver: Option<u32>, loc: &str) -> LalResult<Component>;
 
     /// Publish a release build's ARTIFACT to a specific location
     ///
     /// This will publish everything inside the ARTIFACT dir created by `lal build -r`
-    fn publish_artifact(
+    async fn publish_artifact(
         &self,
         home: Option<&Path>,
         component_dir: &Path,
@@ -71,7 +72,7 @@ pub trait Backend {
     /// Raw fetch of location to a destination
     ///
     /// location can be a HTTPS url / a system path / etc (depending on the backend)
-    fn raw_fetch(&self, location: &str, dest: &Path) -> LalResult<()>;
+    async fn raw_fetch(&self, location: &str, dest: &Path) -> LalResult<()>;
 
     /// Return the base directory to be used to dump cached downloads
     ///
@@ -82,12 +83,17 @@ pub trait Backend {
 /// A secondary trait that builds upon the Backend trait
 ///
 /// This wraps the common fetch commands in a caching layer on the cache dir.
+#[async_trait::async_trait]
 pub trait CachedBackend: Backend {
     /// Get the latest version of a component across all supported environments
-    fn get_latest_supported_versions(&self, name: &str, environments: Vec<String>) -> LalResult<Vec<u32>>;
+    async fn get_latest_supported_versions(
+        &self,
+        name: &str,
+        environments: Vec<String>,
+    ) -> LalResult<Vec<u32>>;
 
     /// Retrieve the location to a cached published component (downloading if necessary)
-    fn retrieve_published_component(
+    async fn retrieve_published_component(
         &self,
         name: &str,
         version: Option<u32>,
@@ -98,7 +104,7 @@ pub trait CachedBackend: Backend {
     fn retrieve_stashed_component(&self, name: &str, code: &str) -> LalResult<PathBuf>;
 
     /// Retrieve and unpack a cached component in INPUT
-    fn unpack_published_component(
+    async fn unpack_published_component(
         &self,
         component_dir: &Path,
         name: &str,

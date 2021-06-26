@@ -18,23 +18,25 @@ fn test_status_without_deps(env_name: &str) {
         return;
     }
 
-    // Test basic build functionality with heylib component
-    let component_dir = clone_component_dir("heylib", &state);
+    state.rt.block_on(async {
+        // Test basic build functionality with heylib component
+        let component_dir = clone_component_dir("heylib", &state);
 
-    let r = fetch::fetch_input(&component_dir, &env_name, &state.backend);
-    assert!(r.is_ok(), "installed heylib dependencies: {:?}", r);
+        let r = fetch::fetch_input(&component_dir, &env_name, &state.backend).await;
+        assert!(r.is_ok(), "installed heylib dependencies: {:?}", r);
 
-    let r = build::build_for_release(&component_dir, &env_name, &state.tempdir.path(), "1");
-    assert!(r.is_ok(), "built heylib release: {:?}", r);
+        let r = build::build_for_release(&component_dir, &env_name, &state.tempdir.path(), "1");
+        assert!(r.is_ok(), "built heylib release: {:?}", r);
 
-    let r = status::status(&component_dir);
-    assert!(r.is_ok(), "checked heylib dependency status: {:?}", r);
+        let r = status::status(&component_dir);
+        assert!(r.is_ok(), "checked heylib dependency status: {:?}", r);
 
-    let r = status::full_status(&component_dir);
-    assert!(r.is_ok(), "checked full heylib dependency status: {:?}", r);
+        let r = status::full_status(&component_dir);
+        assert!(r.is_ok(), "checked full heylib dependency status: {:?}", r);
 
-    let r = status::full_descriptive_status(&component_dir);
-    assert!(r.is_ok(), "checked fully described heylib dependencies: {:?}", r);
+        let r = status::full_descriptive_status(&component_dir);
+        assert!(r.is_ok(), "checked fully described heylib dependencies: {:?}", r);
+    });
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
@@ -44,32 +46,34 @@ fn test_status_with_deps(env_name: &str) {
         return;
     }
 
-    // heylib component is a dependency
-    publish_component(&state, &env_name, "heylib", "1").expect("published heylib=1");
+    state.rt.block_on(async {
+        // heylib component is a dependency
+        publish_component(&state, &env_name, "heylib", "1").await.expect("published heylib=1");
 
-    // helloworld depends on heylib
-    let component_dir = clone_component_dir("helloworld", &state);
+        // helloworld depends on heylib
+        let component_dir = clone_component_dir("helloworld", &state);
 
-    // INPUT dependencies are not ready yet
-    let r = status::status(&component_dir);
-    assert!(r.is_ok(), "helloworld deps not fetched");
-    assert_missing_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib");
+        // INPUT dependencies are not ready yet
+        let r = status::status(&component_dir);
+        assert!(r.is_ok(), "helloworld deps not fetched");
+        assert_missing_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib");
 
-    let r = fetch::fetch_input(&component_dir, &env_name, &state.backend);
-    assert!(r.is_ok(), "installed helloworld dependencies");
-    let lockfile = lal::Lockfile::from_path(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib")
-        .expect("read heylib=1 lockfile");
-    assert_eq!(lockfile.name, "heylib".to_string());
-    assert_eq!(lockfile.version, "1".to_string());
+        let r = fetch::fetch_input(&component_dir, &env_name, &state.backend).await;
+        assert!(r.is_ok(), "installed helloworld dependencies");
+        let lockfile = lal::Lockfile::from_path(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib")
+            .expect("read heylib=1 lockfile");
+        assert_eq!(lockfile.name, "heylib".to_string());
+        assert_eq!(lockfile.version, "1".to_string());
 
-    let r = status::status(&component_dir);
-    assert!(r.is_ok(), "checked helloworld dependency status");
+        let r = status::status(&component_dir);
+        assert!(r.is_ok(), "checked helloworld dependency status");
 
-    let r = status::full_status(&component_dir);
-    assert!(r.is_ok(), "checked full helloworld dependency status");
+        let r = status::full_status(&component_dir);
+        assert!(r.is_ok(), "checked full helloworld dependency status");
 
-    let r = status::full_descriptive_status(&component_dir);
-    assert!(r.is_ok(), "checked fully described helloworld dependencies");
+        let r = status::full_descriptive_status(&component_dir);
+        assert!(r.is_ok(), "checked fully described helloworld dependencies");
+    });
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
@@ -79,38 +83,40 @@ fn test_status_with_stashed_dependency(env_name: &str) {
         return;
     }
 
-    // Initial build to generate a published and a stashed component
-    publish_component(&state, &env_name, "heylib", "1").expect("published heylib=1");
-    stash_component(&state, &env_name, "heylib", "blah").expect("published heylib=blah");
+    state.rt.block_on(async {
+        // Initial build to generate a published and a stashed component
+        publish_component(&state, &env_name, "heylib", "1").await.expect("published heylib=1");
+        stash_component(&state, &env_name, "heylib", "blah").await.expect("published heylib=blah");
 
-    // helloworld depends on heylib
-    let component_dir = clone_component_dir("helloworld", &state);
+        // helloworld depends on heylib
+        let component_dir = clone_component_dir("helloworld", &state);
 
-    // Dependencies are not yet in INPUT
-    let r = status::status(&component_dir);
-    assert!(r.is_ok(), "helloworld has no inputs");
-    assert_missing_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib");
+        // Dependencies are not yet in INPUT
+        let r = status::status(&component_dir);
+        assert!(r.is_ok(), "helloworld has no inputs");
+        assert_missing_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib");
 
-    // Fetch the published dependency
-    let r = fetch::fetch_input(&component_dir, &env_name, &state.backend);
-    assert!(r.is_ok(), "fetched published dependencies for helloworld");
+        // Fetch the published dependency
+        let r = fetch::fetch_input(&component_dir, &env_name, &state.backend).await;
+        assert!(r.is_ok(), "fetched published dependencies for helloworld");
 
-    let r = status::status(&component_dir);
-    assert!(r.is_ok(), "helloworld has published dependencies");
-    let lockfile = lal::Lockfile::from_path(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib")
-        .expect("read heylib=1 lockfile");
-    assert_eq!(lockfile.name, "heylib".to_string());
-    assert_eq!(lockfile.version, "1".to_string());
+        let r = status::status(&component_dir);
+        assert!(r.is_ok(), "helloworld has published dependencies");
+        let lockfile = lal::Lockfile::from_path(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib")
+            .expect("read heylib=1 lockfile");
+        assert_eq!(lockfile.name, "heylib".to_string());
+        assert_eq!(lockfile.version, "1".to_string());
 
-    // Switch to the stashed dependencies, since these are local (a stashed component is never
-    // published, and cannot be consumed by other builds) status checks fail.
-    let r = update::update(&component_dir, &env_name, &state.backend, vec!["heylib=blah"]);
-    assert!(r.is_ok(), "updated heylib=blah from stash");
+        // Switch to the stashed dependencies, since these are local (a stashed component is never
+        // published, and cannot be consumed by other builds) status checks fail.
+        let r = update::update(&component_dir, &env_name, &state.backend, vec!["heylib=blah"]).await;
+        assert!(r.is_ok(), "updated heylib=blah from stash");
 
-    let r = status::status(&component_dir);
-    assert!(r.is_ok(), "helloworld has unpublished (stashed) dependencies");
-    let lockfile = lal::Lockfile::from_path(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib")
-        .expect("read heylib=blah lockfile");
-    assert_eq!(lockfile.name, "heylib".to_string());
-    assert_eq!(lockfile.version, "blah".to_string());
+        let r = status::status(&component_dir);
+        assert!(r.is_ok(), "helloworld has unpublished (stashed) dependencies");
+        let lockfile = lal::Lockfile::from_path(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib")
+            .expect("read heylib=blah lockfile");
+        assert_eq!(lockfile.name, "heylib".to_string());
+        assert_eq!(lockfile.version, "blah".to_string());
+    });
 }
