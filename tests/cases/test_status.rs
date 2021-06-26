@@ -48,7 +48,9 @@ fn test_status_with_deps(env_name: &str) {
 
     state.rt.block_on(async {
         // heylib component is a dependency
-        publish_component(&state, &env_name, "heylib", "1").await.expect("published heylib=1");
+        publish_component(&state, &env_name, "heylib", "1")
+            .await
+            .expect("published heylib=1");
 
         // helloworld depends on heylib
         let component_dir = clone_component_dir("helloworld", &state);
@@ -85,8 +87,12 @@ fn test_status_with_stashed_dependency(env_name: &str) {
 
     state.rt.block_on(async {
         // Initial build to generate a published and a stashed component
-        publish_component(&state, &env_name, "heylib", "1").await.expect("published heylib=1");
-        stash_component(&state, &env_name, "heylib", "blah").await.expect("published heylib=blah");
+        publish_component(&state, &env_name, "heylib", "1")
+            .await
+            .expect("published heylib=1");
+        stash_component(&state, &env_name, "heylib", "blah")
+            .await
+            .expect("published heylib=blah");
 
         // helloworld depends on heylib
         let component_dir = clone_component_dir("helloworld", &state);

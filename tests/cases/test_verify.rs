@@ -35,7 +35,9 @@ fn test_verify_with_deps(env_name: &str, simple: bool) {
 
     state.rt.block_on(async {
         // helloworld component depends on heylib
-        publish_component(&state, &env_name, "heylib", "1").await.expect("published heylib=1");
+        publish_component(&state, &env_name, "heylib", "1")
+            .await
+            .expect("published heylib=1");
 
         let component_dir = clone_component_dir("helloworld", &state);
 
@@ -62,7 +64,9 @@ fn test_verify_with_deps_in_wrong_env(env_name: &str, simple: bool) {
 
     state.rt.block_on(async {
         // helloworld component depends on heylib
-        publish_component(&state, &env_name, "heylib", "1").await.expect("published heylib=1");
+        publish_component(&state, &env_name, "heylib", "1")
+            .await
+            .expect("published heylib=1");
 
         let component_dir = clone_component_dir("helloworld", &state);
         let r = fetch::fetch_input(&component_dir, &env_name, &state.backend).await;
@@ -89,7 +93,9 @@ async fn test_verify_with_stashed_deps(env_name: &str) {
 
     state.rt.block_on(async {
         // Initial build to generate a stashed component
-        stash_component(&state, &env_name, "heylib", "blah").await.expect("stashed heylib=blah");
+        stash_component(&state, &env_name, "heylib", "blah")
+            .await
+            .expect("stashed heylib=blah");
 
         // Main build, with stashed depencency
         let component_dir = clone_component_dir("helloworld", &state);

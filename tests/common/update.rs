@@ -21,7 +21,8 @@ pub async fn update(
         false,
         false,
         &env_name,
-    ).await
+    )
+    .await
 }
 
 pub async fn update_all(
@@ -56,7 +57,8 @@ pub async fn update_with_save(
         save,
         savedev,
         &env_name,
-    ).await
+    )
+    .await
 }
 
 pub async fn update_all_with_save(

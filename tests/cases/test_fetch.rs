@@ -42,7 +42,9 @@ fn test_fetch_with_deps(env_name: &str) {
 
     state.rt.block_on(async {
         // heylib component is a dependency, needs to be publishd first
-        publish_component(&state, &env_name, "heylib", "1").await.expect("publish heylib=1");
+        publish_component(&state, &env_name, "heylib", "1")
+            .await
+            .expect("publish heylib=1");
 
         // helloworld depends on heylib
         let component_dir = clone_component_dir("helloworld", &state);
@@ -60,7 +62,9 @@ fn test_fetch_with_dev_deps(env_name: &str) {
 
     state.rt.block_on(async {
         // heylib component is a dependency, needs to be published first
-        publish_component(&state, &env_name, "heylib", "1").await.expect("publish heylib=1");
+        publish_component(&state, &env_name, "heylib", "1")
+            .await
+            .expect("publish heylib=1");
 
         // helloworld depends on heylib
         let component_dir = clone_component_dir("helloworld", &state);

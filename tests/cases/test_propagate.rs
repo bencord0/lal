@@ -18,7 +18,9 @@ fn test_propagate_compute(env_name: &str) {
     }
 
     state.rt.block_on(async {
-        let component_dir = publish_components(&state, &env_name).await.expect("published components");
+        let component_dir = publish_components(&state, &env_name)
+            .await
+            .expect("published components");
 
         // prop-leaf is a deep dependency, compute what else needs to be
         // updated, in order to update the current component.
@@ -64,7 +66,9 @@ fn test_propagate_print(env_name: &str) {
     }
 
     state.rt.block_on(async {
-        let component_dir = publish_components(&state, &env_name).await.expect("published components");
+        let component_dir = publish_components(&state, &env_name)
+            .await
+            .expect("published components");
 
         let r = propagate::print(&component_dir, "prop-leaf");
         assert!(r.is_ok(), "pretty printed propagation tree");
@@ -79,7 +83,9 @@ fn test_propagate_print_json(env_name: &str) {
     }
 
     state.rt.block_on(async {
-        let component_dir = publish_components(&state, &env_name).await.expect("published components");
+        let component_dir = publish_components(&state, &env_name)
+            .await
+            .expect("published components");
 
         let r = propagate::print_json(&component_dir, "prop-leaf");
         assert!(r.is_ok(), "pretty printed propagation tree");

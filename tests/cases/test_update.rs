@@ -175,7 +175,8 @@ fn test_update_with_save(env_name: &str) {
             vec!["heylib=1"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=1");
         assert_manifest(&component_dir, "heylib", 1);
         assert_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib", 1);
@@ -188,7 +189,8 @@ fn test_update_with_save(env_name: &str) {
             vec!["heylib=2"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=2");
         assert_manifest(&component_dir, "heylib", 2);
         assert_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib", 2);
@@ -220,7 +222,8 @@ fn test_update_to_latest_with_save(env_name: &str) {
             vec!["heylib=1"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=1: {:?}", r);
         assert_manifest(&component_dir, "heylib", 1);
         assert_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib", 1);
@@ -233,7 +236,8 @@ fn test_update_to_latest_with_save(env_name: &str) {
             vec!["heylib"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib: {:?}", r);
 
         // latest version is 2
@@ -267,7 +271,8 @@ fn test_update_all_to_latest_with_save(env_name: &str) {
             vec!["heylib=1"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=1");
         assert_manifest(&component_dir, "heylib", 1);
         assert_lockfile(&component_dir.join("INPUT/heylib/lockfile.json"), "heylib", 1);
@@ -321,7 +326,8 @@ fn test_update_with_savedev(env_name: &str) {
             vec!["prop-leaf=1"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=1");
         assert_manifest(&component_dir, "heylib", 1);
         assert_missing_manifest_dev(&component_dir, "heylib");
@@ -344,7 +350,8 @@ fn test_update_with_savedev(env_name: &str) {
             vec!["heylib=2", "prop-leaf=2"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=2 prop-leaf=2");
 
         // XXX: Bug? Why isn't the core dependency updated in the manifest?
@@ -402,7 +409,8 @@ fn test_update_with_save_savedev(env_name: &str) {
             vec!["prop-leaf=1"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=1: {:?}", r);
         assert_manifest(&component_dir, "heylib", 1);
         assert_missing_manifest_dev(&component_dir, "heylib");
@@ -426,7 +434,8 @@ fn test_update_with_save_savedev(env_name: &str) {
             vec!["heylib=2", "prop-leaf=2"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=2 prop-leaf=2");
 
         // XXX: Bug? Why isn't the core dependency updated in the manifest?
@@ -482,7 +491,8 @@ fn test_update_to_latest_with_savedev(env_name: &str) {
             vec!["prop-leaf"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=1: {:?}", r);
 
         assert_manifest(&component_dir, "heylib", 1);
@@ -503,7 +513,8 @@ fn test_update_to_latest_with_savedev(env_name: &str) {
             vec!["heylib"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib: {:?}", r);
 
         // Remains as a core dependency
@@ -557,7 +568,8 @@ fn test_update_to_latest_with_save_savedev(env_name: &str) {
             vec!["prop-leaf"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib=1");
 
         assert_manifest(&component_dir, "heylib", 1);
@@ -581,7 +593,8 @@ fn test_update_to_latest_with_save_savedev(env_name: &str) {
             vec!["heylib", "prop-leaf"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated heylib");
 
         // XXX: Just documenting current behaviour here
@@ -629,7 +642,8 @@ fn test_update_all_to_latest_with_savedev(env_name: &str) {
             vec!["prop-leaf=1"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated prop-leaf=1");
 
         assert_manifest(&component_dir, "heylib", 1);
@@ -699,7 +713,8 @@ fn test_update_all_to_latest_with_save_savedev(env_name: &str) {
             vec!["prop-leaf=1"],
             save,
             savedev,
-        ).await;
+        )
+        .await;
         assert!(r.is_ok(), "updated prop-leaf=1: {:?}", r);
 
         assert_manifest(&component_dir, "heylib", 1);
