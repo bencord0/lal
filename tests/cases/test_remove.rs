@@ -1,7 +1,7 @@
 use crate::common::*;
 
 #[test]
-pub fn test_remove_dependencies_no_save() {
+fn test_remove_dependencies_no_save() {
     let state = setup();
 
     // "helloworld" has 1 dependency

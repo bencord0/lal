@@ -3,7 +3,7 @@ use lal::Backend;
 use std::{fs, path::Path};
 
 #[test]
-pub fn test_configure_backend() {
+fn test_configure_backend() {
     let state = setup();
 
     assert_eq!(
