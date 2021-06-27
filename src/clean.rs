@@ -15,14 +15,13 @@ fn clean_in_dir(cutoff: DateTime<Utc>, dirs: WalkDir) -> LalResult<()> {
 
     for d in drs {
         let pth = d.path();
-        trace!("Checking {}", pth.to_str().unwrap());
-        let mtime = FileTime::from_last_modification_time(&d.metadata().unwrap());
-        let mtimedate =
-            Utc.ymd(1970, 1, 1).and_hms(0, 0, 0) + Duration::seconds(mtime.unix_seconds() as i64);
+        trace!("Checking {:?}", pth);
+        let mtime = FileTime::from_last_modification_time(&d.metadata()?);
+        let mtimedate = Utc.ymd(1970, 1, 1).and_hms(0, 0, 0) + Duration::seconds(mtime.unix_seconds() as i64);
 
-        trace!("Found {} with mtime {}", pth.to_str().unwrap(), mtimedate);
+        trace!("Found {:?} with mtime {}", pth, mtimedate);
         if mtimedate < cutoff {
-            debug!("Cleaning {}", pth.to_str().unwrap());
+            debug!("Cleaning {:?}", pth);
             fs::remove_dir_all(pth)?;
         }
     }

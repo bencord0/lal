@@ -1,7 +1,7 @@
 use std::{path::Path, process::Command, vec::Vec};
 
-use crate::core::{CliError, Config, Container, LalResult};
 use super::COMMAND_LOCK;
+use crate::core::{CliError, Config, Container, LalResult};
 
 /// Flags for docker run that vary for different use cases
 ///
@@ -38,11 +38,11 @@ pub struct ShellModes {
 fn permission_sanity_check() -> LalResult<(u32, u32)> {
     let uid_output = Command::new("id").arg("-u").output()?;
     let uid_str = String::from_utf8_lossy(&uid_output.stdout);
-    let uid = uid_str.trim().parse::<u32>().unwrap(); // trust `id -u` is sane
+    let uid = uid_str.trim().parse::<u32>()?; // trust `id -u` is sane
 
     let gid_output = Command::new("id").arg("-g").output()?;
     let gid_str = String::from_utf8_lossy(&gid_output.stdout);
-    let gid = gid_str.trim().parse::<u32>().unwrap(); // trust `id -g` is sane
+    let gid = gid_str.trim().parse::<u32>()?; // trust `id -g` is sane
 
     if uid == 0 || gid == 0 {
         return Err(CliError::DockerPermissionSafety(

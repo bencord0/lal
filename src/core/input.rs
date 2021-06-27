@@ -45,8 +45,8 @@ pub fn analyze(component_dir: &Path) -> LalResult<BTreeMap<String, String>> {
         .filter(|e| e.path().is_dir());
 
     for d in dirs {
-        let pth = d.path().strip_prefix(&component_dir.join("INPUT")).unwrap();
-        let component = pth.to_str().unwrap();
+        let pth: &Path = d.path().strip_prefix(&component_dir.join("INPUT"))?;
+        let component = pth.to_str().ok_or(CliError::UnicodeError)?;
         let lck = read_partial_lockfile(component, &component_dir)?;
         deps.insert(component.to_string(), lck.version);
     }
@@ -124,10 +124,10 @@ pub fn verify_dependencies_present(component_dir: &Path, m: &Manifest) -> LalRes
         .filter_map(|e| e.ok())
         .filter(|e| e.path().is_dir());
     for entry in dirs {
-        let pth = entry.path().strip_prefix(component_dir.join("INPUT")).unwrap();
+        let pth = entry.path().strip_prefix(component_dir.join("INPUT"))?;
         debug!("-> {}", pth.display());
 
-        let component = pth.to_str().unwrap();
+        let component = pth.to_str().ok_or(CliError::UnicodeError)?;
         deps.push(component.to_string());
     }
     debug!("Found the following deps in INPUT: {:?}", deps);
@@ -201,9 +201,12 @@ pub fn verify_environment_consistency(lf: &Lockfile, env: &str) -> LalResult<()>
             warn!("Multiple environments used to build {}", name);
             return Err(CliError::MultipleEnvironments(name));
         } else {
-            let used_env = envs.iter().next().unwrap();
-            if used_env != env {
-                return Err(CliError::EnvironmentMismatch(name, used_env.clone()));
+            if let Some(used_env) = envs.iter().next() {
+                if used_env != env {
+                    return Err(CliError::EnvironmentMismatch(name, used_env.clone()));
+                }
+            } else {
+                return Err(CliError::MissingEnvironment(name));
             }
         }
     }

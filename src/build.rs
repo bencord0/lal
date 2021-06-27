@@ -26,10 +26,7 @@ fn find_valid_build_script(component_dir: &Path) -> LalResult<String> {
     trace!("Using BUILD script found in {}", bpath.display());
     // Need the string to construct a list of argument for docker run
     // lossy convert because paths can somehow contain non-unicode?
-    let build_string = format!(
-        "./{}",
-        bpath.strip_prefix(&component_dir).unwrap().to_string_lossy()
-    );
+    let build_string = format!("./{}", bpath.strip_prefix(&component_dir)?.to_string_lossy());
 
     // presumably we can always get the permissions of a file, right? (inb4 nfs..)
     let mode = bpath.metadata()?.permissions().mode();

@@ -158,8 +158,8 @@ fn ssl_cert_sanity() -> LalResult<()> {
 }
 
 fn lal_version_check(minlal: &str) -> LalResult<()> {
-    let current = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
-    let req = Version::parse(minlal).unwrap();
+    let current = Version::parse(env!("CARGO_PKG_VERSION"))?;
+    let req = Version::parse(minlal)?;
     if current < req {
         Err(CliError::OutdatedLal(current.to_string(), req.to_string()))
     } else {
@@ -175,7 +175,7 @@ fn lal_version_check(minlal: &str) -> LalResult<()> {
 fn non_root_sanity() -> LalResult<()> {
     let uid_output = Command::new("id").arg("-u").output()?;
     let uid_str = String::from_utf8_lossy(&uid_output.stdout);
-    let uid = uid_str.trim().parse::<u32>().unwrap(); // trust `id -u` is sane
+    let uid = uid_str.trim().parse::<u32>()?; // trust `id -u` is sane
 
     if uid == 0 {
         warn!("Running lal as root user not allowed");

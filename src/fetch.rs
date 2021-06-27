@@ -3,11 +3,13 @@ use std::{fs, path::Path};
 use super::{CliError, LalResult, Lockfile, Manifest};
 use crate::storage::CachedBackend;
 
-fn clean_input(component_dir: &Path) {
+fn clean_input(component_dir: &Path) -> LalResult<()> {
     let input = component_dir.join("./INPUT");
     if input.is_dir() {
-        fs::remove_dir_all(&input).unwrap();
+        fs::remove_dir_all(&input)?;
     }
+
+    Ok(())
 }
 
 /// Fetch all dependencies from `manifest.json`
@@ -102,7 +104,7 @@ pub async fn fetch(
 
     if err.is_some() {
         warn!("Cleaning potentially broken INPUT");
-        clean_input(&component_dir); // don't want to risk having users in corrupted states
+        clean_input(&component_dir)?; // don't want to risk having users in corrupted states
         return Err(CliError::InstallFailure);
     }
     Ok(())

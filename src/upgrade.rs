@@ -36,7 +36,7 @@ fn identify_exe() -> LalResult<ExeInfo> {
     let ldd_output = Command::new("ldd").arg(&pth).output()?;
     let ldd_str = String::from_utf8_lossy(&ldd_output.stdout);
     let dynamic = !ldd_str.contains("not a dynamic executable");
-    let path: String = pth.to_str().unwrap().into();
+    let path: String = pth.to_str()?.into();
     let debug = path.contains("debug"); // cheap check for compiled versions
     let prefix = if path.contains("/bin/") {
         let v: Vec<&str> = path.split("/bin/").collect();
@@ -53,7 +53,7 @@ fn identify_exe() -> LalResult<ExeInfo> {
         debug,
         path,
         prefix,
-        version: Version::parse(env!("CARGO_PKG_VERSION")).unwrap(),
+        version: Version::parse(env!("CARGO_PKG_VERSION"))?,
     })
 }
 
@@ -83,7 +83,7 @@ fn verify_permissions(exe: &ExeInfo) -> LalResult<()> {
 }
 
 fn overwrite_exe(latest: &LatestLal, exe: &ExeInfo) -> LalResult<()> {
-    let prefix = exe.prefix.clone().unwrap();
+    let prefix = exe.prefix.clone()?;
     extract_tarball(prefix.join("lal.tar.gz"), &prefix)?;
     validate_exe(latest, exe)?;
     Ok(())
@@ -103,7 +103,7 @@ fn validate_exe(latest: &LatestLal, exe: &ExeInfo) -> LalResult<()> {
 }
 
 fn upgrade_exe(latest: &LatestLal, exe: &ExeInfo) -> LalResult<()> {
-    let prefix = exe.prefix.clone().unwrap();
+    let prefix = exe.prefix.clone()?;
     // 0. sanity - could we actually upgrade if we tried?
     verify_permissions(exe)
         .map_err(|_| CliError::MissingPrefixPermissions(prefix.to_string_lossy().into()))?;

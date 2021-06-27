@@ -15,11 +15,13 @@ fn result_exit<T>(name: &str, x: LalResult<T>) {
     process::exit(0);
 }
 
-fn get_backend(config: &Config) -> Box<dyn CachedBackend> {
-    match config.backend {
-        BackendConfiguration::Artifactory(ref cfg) => Box::new(ArtifactoryBackend::new(&cfg, &config.cache)),
-        BackendConfiguration::Local(ref cfg) => Box::new(LocalBackend::new(&cfg, &config.cache)),
-    }
+fn get_backend(config: &Config) -> LalResult<Box<dyn CachedBackend>> {
+    let backend: Box<dyn CachedBackend> = match config.backend {
+        BackendConfiguration::Artifactory(ref cfg) => Box::new(ArtifactoryBackend::new(&cfg, &config.cache)?),
+        BackendConfiguration::Local(ref cfg) => Box::new(LocalBackend::new(&cfg, &config.cache)?),
+    };
+
+    Ok(backend)
 }
 
 // functions that work without a manifest, and thus can run without a set env
@@ -29,9 +31,9 @@ async fn handle_manifest_agnostic_cmds(
     component_dir: &Path,
     backend: &dyn CachedBackend,
     explicit_env: Option<&str>,
-) {
+) -> LalResult<()> {
     let res = if let Some(a) = args.subcommand_matches("export") {
-        let curdir = current_dir().unwrap();
+        let curdir = current_dir()?;
         lal::export(backend, a.value_of("component").unwrap(), &curdir, explicit_env).await
     } else if let Some(a) = args.subcommand_matches("query") {
         lal::query(
@@ -46,9 +48,11 @@ async fn handle_manifest_agnostic_cmds(
     } else if args.subcommand_matches("list-environments").is_some() {
         lal::list::environments(cfg)
     } else {
-        return;
+        return Ok(());
     };
     result_exit(args.subcommand_name().unwrap(), res);
+
+    Ok(())
 }
 
 // functions that need a manifest, but do not depend on environment values
@@ -315,17 +319,15 @@ async fn main() -> LalResult<()> {
     }
 
     // Force config to exists before allowing remaining actions
-    let config = Config::read(None)
-        .map_err(|e| {
-            error!("Configuration error: {}", e);
-            println!();
-            println!("If you have just installed or upgraded, run `lal configure`");
-            process::exit(1);
-        })
-        .unwrap();
+    let config = Config::read(None).map_err(|e| {
+        error!("Configuration error: {}", e);
+        println!();
+        println!("If you have just installed or upgraded, run `lal configure`");
+        e
+    })?;
 
     // Create a storage backend (something that implements storage/traits.rs)
-    let backend: Box<dyn CachedBackend> = get_backend(&config);
+    let backend: Box<dyn CachedBackend> = get_backend(&config)?;
 
     // Ensure SSL is initialized before using the backend
     openssl_probe::init_ssl_cert_env_vars();
@@ -334,43 +336,39 @@ async fn main() -> LalResult<()> {
     #[cfg(feature = "upgrade")]
     handle_upgrade(&args, &config);
 
-    let component_dir = current_dir().unwrap();
+    let component_dir = current_dir()?;
     // Allow lal init / clean without manifest existing in PWD
     if let Some(a) = args.subcommand_matches("init") {
+        let env = a.value_of("environment").unwrap_or("default");
         result_exit(
             "init",
-            lal::init(
-                &config,
-                a.is_present("force"),
-                &component_dir,
-                a.value_of("environment").unwrap(),
-            ),
+            lal::init(&config, a.is_present("force"), &component_dir, env),
         );
     } else if let Some(a) = args.subcommand_matches("clean") {
-        let days = a.value_of("days").unwrap().parse().unwrap();
+        let days = if let Some(days) = a.value_of("days") {
+            days.parse()?
+        } else {
+            14
+        };
+
         result_exit("clean", lal::clean(&config.cache, days));
     }
 
     // Read .lal/opts if it exists
-    let stickies = StickyOptions::read(&component_dir)
-        .map_err(|e| {
-            // Should not happen unless people are mucking with it manually
-            error!("Options error: {}", e);
-            println!(".lal/opts must be valid json");
-            process::exit(1);
-        })
-        .unwrap(); // we get a default empty options here otherwise
+    let stickies = StickyOptions::read(&component_dir).map_err(|e| {
+        // Should not happen unless people are mucking with it manually
+        error!("Options error: {}", e);
+        println!(".lal/opts must be valid json");
+        e
+    })?;
 
     // Manifest agnostic commands need explicit environments to not look in global location
     let explicit_env = args.value_of("environment");
     if let Some(env) = explicit_env {
-        config
-            .get_environment(env)
-            .map_err(|e| {
-                error!("Environment error: {}", e);
-                process::exit(1)
-            })
-            .unwrap();
+        config.get_environment(env).map_err(|e| {
+            error!("Environment error: {}", e);
+            e
+        })?;
     }
     handle_manifest_agnostic_cmds(&args, &config, &component_dir, backend.deref(), explicit_env).await?;
 

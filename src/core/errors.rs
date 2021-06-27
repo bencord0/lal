@@ -24,6 +24,9 @@ pub enum CliError {
     /// Errors propagated from `log`
     Log(log::SetLoggerError),
 
+    /// Errors when encoding or decoding strings
+    UnicodeError,
+
     // main errors
     /// Manifest file not found in working directory
     MissingManifest,
@@ -153,6 +156,11 @@ impl fmt::Display for CliError {
             CliError::Hype(ref err) => err.fmt(f),
             CliError::SemVer(ref err) => err.fmt(f),
             CliError::Log(ref err) => err.fmt(f),
+
+            CliError::UnicodeError => {
+                write!(f, "Unicode Error")
+            }
+
             CliError::MissingManifest => {
                 write!(f, "No manifest.json found - are you at repository toplevel?")
             }
