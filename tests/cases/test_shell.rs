@@ -2,7 +2,7 @@ use crate::common::*;
 use parameterized_macro::parameterized;
 
 #[parameterized(env_name = {"default", "alpine"})]
-pub fn test_heylib_echo(env_name: &str) {
+fn test_heylib_echo(env_name: &str) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;
@@ -19,7 +19,7 @@ pub fn test_heylib_echo(env_name: &str) {
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
-pub fn test_shell_permissions(env_name: &str) {
+fn test_shell_permissions(env_name: &str) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;
@@ -36,7 +36,7 @@ pub fn test_shell_permissions(env_name: &str) {
 }
 
 #[parameterized(env_name = {"default", "alpine"})]
-pub fn test_run_scripts(env_name: &str) {
+fn test_run_scripts(env_name: &str) {
     let state = setup();
     if !cfg!(feature = "docker") && env_name == "alpine" {
         return;
